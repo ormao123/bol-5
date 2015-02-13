@@ -1,19 +1,45 @@
 
+if myHero.charName ~="Teemo" then return end
+
 local lastAttack, lastWindUpTime, lastAttackCD = 0, 0, 0 --we initalize the variables
 	
 local ts
-local VERSION = 1.01
+local version = 1.02
 local Qcasting = false
+local Qdamage = { 80, 125, 170, 215, 260}
 -- rance
+
+local AUTO_UPDATE = true
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/jineyne/bol/master/Your Teemo.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = LIB_PATH.."Your Teemo.lua"
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+
+local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Teemo:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+if AUTO_UPDATE then
+	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/VPrediction.version")
+	if ServerData then
+		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
+		if ServerVersion then
+			if tonumber(version) < ServerVersion then
+				AutoupdaterMsg("New version available"..ServerVersion)
+				AutoupdaterMsg("Updating, please don't press F9")
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
+			else
+				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+			end
+		end
+	else
+		AutoupdaterMsg("Error downloading version info")
+	end
+end
 
 local MyminBBox = GetDistance(myHero.minBBox)/2
 local AArance = myHero.range+MyminBBox
 
 function OnLoad()
-
-	if myHero.charName ~="Teemo" then return end
 	
-	PrintChat("Hello, Yours Teemo ver."..VERSION)
+	PrintChat("Hello, Yours Teemo ver."..version)
 	
     ConfigYT = scriptConfig("yours Teemo", "yoursTeemo")
 		ConfigYT:addSubMenu("combo","combo")
@@ -83,13 +109,12 @@ function killsteal()
 	if ConfigYT.harass.killstealQ then
 		ts:update()
 		if (ts.target ~= nil) then
-			if (ts.target.health < 100) and (myHero:CanUseSpell(_Q) == READY) then
+			if (ts.target.health < Qdamage[myHero:GetSpellData(_Q).level]) and (myHero:CanUseSpell(_Q) == READY) then
 				CastSpell(_Q, ts.target)
 			end
 		end
 	end
 end
-
 -- orbwalk
 
 function OrbWalk()
