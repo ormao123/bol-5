@@ -17,16 +17,16 @@ local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Teemo:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 if AUTO_UPDATE then
-	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/VPrediction.version")
+	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/Your Teemo.version")
 	if ServerData then
 		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
 		if ServerVersion then
 			if tonumber(version) < ServerVersion then
 				AutoupdaterMsg("New version available"..ServerVersion)
-				AutoupdaterMsg("Updating, please don't press F9")
+				--[[AutoupdaterMsg("Updating, please don't press F9")
 				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
 			else
-				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")]]
 			end
 		end
 	else
@@ -38,8 +38,6 @@ local MyminBBox = GetDistance(myHero.minBBox)/2
 local AArance = myHero.range+MyminBBox
 
 function OnLoad()
-	
-	PrintChat("Hello, Yours Teemo ver."..version)
 	
     ConfigYT = scriptConfig("yours Teemo", "yoursTeemo")
 		ConfigYT:addSubMenu("combo","combo")
