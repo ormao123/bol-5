@@ -4,9 +4,12 @@ if myHero.charName ~="Teemo" then return end
 local lastAttack, lastWindUpTime, lastAttackCD = 0, 0, 0 --we initalize the variables
 	
 local ts
-local version = 1.02
+local version = 1.03
 local Qcasting = false
+local Rcasting = false
 local Qdamage = { 80, 125, 170, 215, 260}
+local Player = GetMyHero()
+local EnemyHeroes = GetEnemyHeroes()
 -- rance
 
 local AUTO_UPDATE = true
@@ -43,6 +46,7 @@ function OnLoad()
 		ConfigYT:addSubMenu("combo","combo")
 			ConfigYT.combo:addParam("combohotkey","Combo Hot Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 			ConfigYT.combo:addParam("castq", "Cast Q", SCRIPT_PARAM_ONOFF, true)
+			--ConfigYT.combo:addParam("qandaa", "AA after Q", SCRIPT_PARAM_ONOFF, true)
 			ConfigYT.combo:addParam("castw", "Cast W", SCRIPT_PARAM_ONOFF, true)
 			--ConfigYT.combo:addParam("castr", "Cast R", SCRIPT_PARAM_ONOFF, true)
 			
@@ -51,12 +55,13 @@ function OnLoad()
 			--ConfigYT.orbwalk:addParam("OWlasthit","lasthit", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
 			--ConfigYT.orbwalk:addParam("OWharass","harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 	
-		ConfigYT:addSubMenu("harass", "harass")
-			ConfigYT.harass:addParam("killstealQ", "killsteal Auto Q", SCRIPT_PARAM_ONKEYTOGGLE, true, string.byte("N"))
+		ConfigYT:addSubMenu("killsteal", "killsteal")
+			ConfigYT.killsteal:addParam("killstealQ", "killsteal Auto Q", SCRIPT_PARAM_ONOFF, true)
 		
 		ConfigYT:addSubMenu("draw", "draw")
 			ConfigYT.draw:addParam("aadraw", "Draw AA rance", SCRIPT_PARAM_ONOFF, true)
 			ConfigYT.draw:addParam("qdraw", "Draw Q rance", SCRIPT_PARAM_ONOFF, true)
+			ConfigYT.draw:addParam("targetdraw", "Target Draw", SCRIPT_PARAM_ONOFF, false)
 			
 		ts = TargetSelector(TARGET_LOW_HP_PRIORITY,580)
 end
@@ -66,6 +71,7 @@ function OnTick()
 	if myHero.dead then return end
 	
 	killsteal()
+	
 	COMBO()
 	OnDraw()
 	if ConfigYT.orbwalk.OWcombomod then
@@ -101,14 +107,20 @@ function OnDraw()
     if ConfigYT.draw.qdraw then
         DrawCircle(myHero.x, myHero.y, myHero.z, 580, 0xFFFF0000)
     end
+	if ConfigYT.draw.targetdraw then
+		ts:update()
+		if ts.target ~= nil then
+			DrawCircle(ts.target.x,ts.target.y, ts.target.z, 100, 0xFFFFFFff)
+		end
+	end
 end
 
 function killsteal()
-	if ConfigYT.harass.killstealQ then
-		ts:update()
-		if (ts.target ~= nil) then
-			if (ts.target.health < Qdamage[myHero:GetSpellData(_Q).level]) and (myHero:CanUseSpell(_Q) == READY) then
-				CastSpell(_Q, ts.target)
+	local i, Champion
+	for i, Champion in pairs(EnemyHeroes) do
+		if ValidTarget(Champion) then
+			if GetDistance(Champion, Player) <= 580 and getDmg("Q", Champion, Player) > Champion.health and ConfigYT.killsteal.killstealQ then
+				CastSpell(_Q, Champion)
 			end
 		end
 	end
