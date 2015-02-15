@@ -3,11 +3,13 @@ if myHero.charName ~="Teemo" then return end
 
 local lastAttack, lastWindUpTime, lastAttackCD = 0, 0, 0 --we initalize the variables
 	
+	
+local flash = nil
+local ignite = nil
 local ts
-local version = 1.04
+local version = 1.05
 local Qcasting = false
 local Rcasting = false
-local Qdamage = { 80, 125, 170, 215, 260}
 local Player = GetMyHero()
 local EnemyHeroes = GetEnemyHeroes()
 -- rance
@@ -73,6 +75,7 @@ function OnLoad()
 	
 		ConfigYT:addSubMenu("killsteal", "killsteal")
 			ConfigYT.killsteal:addParam("killstealQ", "killsteal Auto Q", SCRIPT_PARAM_ONOFF, true)
+			ConfigYT.killsteal:addParam("flashQkilsteal","killsteal Auto flash Q", SCRIPT_PARAM_ONOFF, false)
 		
 		ConfigYT:addSubMenu("draw", "draw")
 			ConfigYT.draw:addParam("aadraw", "Draw AA rance", SCRIPT_PARAM_ONOFF, true)
@@ -119,7 +122,7 @@ end
 function OnDraw()
 
 	if ConfigYT.draw.aadraw then
-		DrawCircle(myHero.x, myHero.y, myHero.z, AArance, 0xFFFFFF00)
+		DrawCircle(myHero.x, myHero.y, myHero.z, AArance, 0xFFFFFFFF)
 	end
     if ConfigYT.draw.qdraw then
         DrawCircle(myHero.x, myHero.y, myHero.z, 580, 0xFFFF0000)
@@ -135,13 +138,38 @@ function OnDraw()
 			DrawCircle(v.x, v.y, v.z, 100, 0x33FFFF)
 		end
 	end
+	--[[local i, Champion
+	for i, Champion in pairs(EnemyHeroes) do
+		if ValidTarget(Champion) then
+			if GetDistance(Champion, Player) <= 1000 and getDmg("Q", Champion, Player) > Champion.health then
+				DrawText("Can you Kill him with Q", 18, Champion.x, Champion.y, 0xFF000000)
+			elseif GetDistance(Champion, Player) <= 1000 and getDmg("Q", Champion, Player) <= Champion.health then
+				DrawText("Cant you Kill him with Q", 18, Champion.x, Champion.y, 0xFF000000)
+			end
+		end
+	end]]
+end
+
+function GetSummoners()
+	if string.lower(myHero:GetSpellData(SUMMONER_1).name) == "summonerflash" then
+		flash = SUMMONER_1
+	elseif string.lower(myHero:GetSpellData(SUMMONER_2).name) == "summonerflash" then
+		flash = SUMMONER_2
+	else
+		flash = nil
+	end
 end
 
 function killsteal()
 	local i, Champion
 	for i, Champion in pairs(EnemyHeroes) do
 		if ValidTarget(Champion) then
-			if GetDistance(Champion, Player) <= 580 and getDmg("Q", Champion, Player) > Champion.health and ConfigYT.killsteal.killstealQ then
+			if GetDistance(Champion, Player) <= 580 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", Champion, Player) > Champion.health and ConfigYT.killsteal.killstealQ then
+				CastSpell(_Q, Champion)
+			end
+			if GetDistance (Champion, Player) <= 980 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", Champion, Player) > Champion.health and ConfigYT.killsteal.flashQkilsteal then
+				GetSummoners()
+				CastSpell(flash, Champion.x, Champion.z)
 				CastSpell(_Q, Champion)
 			end
 		end
