@@ -4,7 +4,7 @@ if myHero.charName ~="Teemo" then return end
 local lastAttack, lastWindUpTime, lastAttackCD = 0, 0, 0 --we initalize the variables
 	
 local ts
-local version = 1.03
+local version = 1.04
 local Qcasting = false
 local Rcasting = false
 local Qdamage = { 80, 125, 170, 215, 260}
@@ -40,6 +40,22 @@ end
 local MyminBBox = GetDistance(myHero.minBBox)/2
 local AArance = myHero.range+MyminBBox
 
+local bestshroom =
+ {
+	{x = 10406, y = 50.08506, z = 3050},
+	{x = 10202, y = -71.2406, z = 4884},
+	{x = 11222, y = -2.569444, z = 5592},
+	{x = 10032, y = 49.70721, z = 6610},
+	{x = 8580, y = -50.36785, z = 5560},
+	{x = 11960, y = 52.09994, z = 7400},
+	{x = 4804, y = 40.283, z = 8334},
+	{x = 6264, y = -62.41959, z = 9332},
+	{x = 4724, y = -71.2406, z = 10024},
+	{x = 3636, y = -8.188844, z = 9348},
+	{x = 4425, y = 56.8484, z = 11810},
+	{x = 2848, y = 51.84816, z = 7362}
+ }
+
 function OnLoad()
 	
     ConfigYT = scriptConfig("yours Teemo", "yoursTeemo")
@@ -61,6 +77,7 @@ function OnLoad()
 		ConfigYT:addSubMenu("draw", "draw")
 			ConfigYT.draw:addParam("aadraw", "Draw AA rance", SCRIPT_PARAM_ONOFF, true)
 			ConfigYT.draw:addParam("qdraw", "Draw Q rance", SCRIPT_PARAM_ONOFF, true)
+			ConfigYT.draw:addParam("bshroom", "Best shroom Draw", SCRIPT_PARAM_ONOFF, true)
 			ConfigYT.draw:addParam("targetdraw", "Target Draw", SCRIPT_PARAM_ONOFF, false)
 			
 		ts = TargetSelector(TARGET_LOW_HP_PRIORITY,580)
@@ -111,6 +128,11 @@ function OnDraw()
 		ts:update()
 		if ts.target ~= nil then
 			DrawCircle(ts.target.x,ts.target.y, ts.target.z, 100, 0xFFFFFFff)
+		end
+	end
+	if ConfigYT.draw.bshroom then
+		for _, v in ipairs(bestshroom) do
+			DrawCircle(v.x, v.y, v.z, 100, 0x33FFFF)
 		end
 	end
 end
