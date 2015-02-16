@@ -1,3 +1,8 @@
+--[[
+	update note
+	1.06 | Add Harass
+]]
+
 
 if myHero.charName ~="Teemo" then return end
 
@@ -7,7 +12,7 @@ local lastAttack, lastWindUpTime, lastAttackCD = 0, 0, 0 --we initalize the vari
 local flash = nil
 local ignite = nil
 local ts
-local version = 1.05
+local version = 1.06
 local Qcasting = false
 local Rcasting = false
 local Player = GetMyHero()
@@ -60,6 +65,7 @@ local bestshroom =
 
 function OnLoad()
 	
+	print("<font color=\#6699ff\"><b>Yours Teemo:</b></font> <font color=\"#FFFFFF\">OrbWalk is Not Wark. plz use Another OrbWalk</font>"")
     ConfigYT = scriptConfig("yours Teemo", "yoursTeemo")
 		ConfigYT:addSubMenu("combo","combo")
 			ConfigYT.combo:addParam("combohotkey","Combo Hot Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
@@ -69,13 +75,16 @@ function OnLoad()
 			--ConfigYT.combo:addParam("castr", "Cast R", SCRIPT_PARAM_ONOFF, true)
 			
 		ConfigYT:addSubMenu("orbwalk","orbwalk")
-			ConfigYT.orbwalk:addParam("OWcombomod","Combo Mode", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+			--ConfigYT.orbwalk:addParam("OWcombomod","Combo Mode", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 			--ConfigYT.orbwalk:addParam("OWlasthit","lasthit", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
 			--ConfigYT.orbwalk:addParam("OWharass","harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 	
 		ConfigYT:addSubMenu("killsteal", "killsteal")
 			ConfigYT.killsteal:addParam("killstealQ", "killsteal Auto Q", SCRIPT_PARAM_ONOFF, true)
 			ConfigYT.killsteal:addParam("flashQkilsteal","killsteal Auto flash Q", SCRIPT_PARAM_ONOFF, false)
+		
+		ConfigYT:addSubMenu("harass", "harass")
+			ConfigYT.harass:addParam("harassQ","harass", SCRIPT_PARAM_ONOFF, true)
 		
 		ConfigYT:addSubMenu("draw", "draw")
 			ConfigYT.draw:addParam("aadraw", "Draw AA rance", SCRIPT_PARAM_ONOFF, true)
@@ -96,6 +105,16 @@ function OnTick()
 	OnDraw()
 	if ConfigYT.orbwalk.OWcombomod then
 		OrbWalk()
+	end
+	harass()
+end
+
+function harass()
+	ts:update()
+	if ConfigYT.harass.harassQ then
+		if ts.target ~= nil and GetDistance(ts.target, Player) <= 580 then
+			CastSpell(_Q, ts.target)
+		end
 	end
 end
 
@@ -122,7 +141,7 @@ end
 function OnDraw()
 
 	if ConfigYT.draw.aadraw then
-		DrawCircle(myHero.x, myHero.y, myHero.z, AArance, 0xFFFFFFFF)
+		DrawCircle(myHero.x, myHero.y, myHero.z, AArance, 0xFFFFCC)
 	end
     if ConfigYT.draw.qdraw then
         DrawCircle(myHero.x, myHero.y, myHero.z, 580, 0xFFFF0000)
