@@ -65,7 +65,7 @@ local bestshroom =
 
 function OnLoad()
 	
-	print("<font color=\#6699ff\"><b>Yours Teemo:</b></font> <font color=\"#FFFFFF\">OrbWalk is Not Wark. plz use Another OrbWalk</font>"")
+	print("<font color=\#6699ff\"><b>Yours Teemo:</b></font> <font color=\"#FFFFFF\">OrbWalk is Not Wark. plz use Another OrbWalk</font>")
     ConfigYT = scriptConfig("yours Teemo", "yoursTeemo")
 		ConfigYT:addSubMenu("combo","combo")
 			ConfigYT.combo:addParam("combohotkey","Combo Hot Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
