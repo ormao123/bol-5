@@ -81,31 +81,31 @@ function DmgCalc()
  
 
         if myHero.health < SpellR then
-            ChampionTable[i].indicatorText = "Kills me with: R"
+            ChampionTable[i].indicatorText = "Killed with: R"
 
         elseif myHero.health < SpellQ then
-            ChampionTable[i].indicatorText = "Kills me with: Q"
+            ChampionTable[i].indicatorText = "Killed with: Q"
 
         elseif myHero.health < SpellW then
-            ChampionTable[i].indicatorText = "Kills me with: W"
+            ChampionTable[i].indicatorText = "Killed with: W"
 
         elseif myHero.health < SpellE then
-            ChampionTable[i].indicatorText = "Kills me with: E"
+            ChampionTable[i].indicatorText = "Killed with: E"
 
         elseif myHero.health < SpellQ + SpellR then
-            ChampionTable[i].indicatorText = "Kills me with: Q + R"
+            ChampionTable[i].indicatorText = "Killed with: Q + R"
 
         elseif myHero.health < SpellW + SpellR then
-            ChampionTable[i].indicatorText = "Kills me with: W + R"
+            ChampionTable[i].indicatorText = "Killed with: W + R"
 
         elseif myHero.health < SpellE + SpellR then
-            ChampionTable[i].indicatorText = "Kills me with: E + R"
+            ChampionTable[i].indicatorText = "Killed with: E + R"
 
         elseif myHero.health < SpellQ + SpellW + SpellR then
-            ChampionTable[i].indicatorText = "Kills me with: Q + W + R"
+            ChampionTable[i].indicatorText = "Killed  with: Q + W + R"
 
         elseif myHero.health < SpellQ + SpellE + SpellR then
-            ChampionTable[i].indicatorText = "Kills me with: Q + E + R"
+            ChampionTable[i].indicatorText = "Killed with: Q + E + R"
 
         else
             local dmgTotal = (SpellQ + SpellW + SpellE + SpellR)
