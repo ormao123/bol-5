@@ -1,3 +1,4 @@
+if myHero.charName ~= "Talon" then return end
 
 local ranceQ = 250
 local ranceW = 750
