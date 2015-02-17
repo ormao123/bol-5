@@ -10,10 +10,10 @@ local ts
 
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 local Qdmg, Wdmg, Edmg, Rdmg = nil, nil, nil, nil
-local tiamat, hydra = nil, nil
-local TMready, HRready = nil, nil
+--local tiamat, hydra = nil, nil
+--local TMready, HRready = nil, nil
 
-local version = 1.00
+local version = 1.01
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Talon -Combo-.lua".."?rand="..math.random(1,10000)
@@ -44,7 +44,7 @@ function OnLoad()
 	-- menu
 	loadMenu()
 	
-	GetItem()
+	--GetItem()
 	-- target
 	ts = TargetSelector(TARGET_LOW_HP_PRIORITY, 750)
 
@@ -67,7 +67,7 @@ end
 
 function OnTick()
 	GetSpellStat()
-	GetItem()
+	--GetItem()
 	if ConfigY.harass.harass then
 		Harass()
 	end
@@ -77,10 +77,10 @@ function OnTick()
 	end
 end
 
-function GetItem()
+--[[function GetItem()
 	tiamat = GetInventorySlotItem(3077)
 	hydra = GetInventorySlotItem(3074)
-end
+end]]
 
 function Harass()
 	ts:update()
@@ -115,7 +115,7 @@ function GetSpellStat()
 		Rready = false
 	end
 	
-	if tiamat ~= nil and myHero:CanUseSpell(tiamat) == READY then
+	--[[if tiamat ~= nil and myHero:CanUseSpell(tiamat) == READY then
 		TMready = true
 	else
 		TMready = false
@@ -125,7 +125,7 @@ function GetSpellStat()
 		HRready = true
 	else
 		HRready = false
-	end
+	end]]
 end
 
 function OnCombo()
@@ -147,13 +147,12 @@ function OnCombo()
 	if GetDistance(ts.target, myHero) < ranceR and Rready then
 		CastSpell(_R)
 	end
-	if HRready then CastSpell(hydra, ts.target) end
-	if TMready then CastSpell(tiamat, ts.target) end
+	--if HRready then CastSpell(hydra, ts.target) end
+	--if TMready then CastSpell(tiamat, ts.target) end
 end
 
 
 function OnDraw()                                                                                                          
-	
 	if ConfigY.draw.drawerance then
 		DrawCircle(myHero.x, myHero.y, myHero.z, ranceE, 0xFFFFCC)
 	end
