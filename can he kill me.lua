@@ -5,7 +5,7 @@ local version = 1.00
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/can he kill me.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = LIB_PATH.."Yours Teemo.lua"
+local UPDATE_FILE_PATH = LIB_PATH.."can he kill me.lua"
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>can he kill me:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
