@@ -9,8 +9,12 @@ local wDelay = 50
 
 local ts
 
+
+require "VPrediction"
+
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 local Qdmg, Wdmg, Edmg, Rdmg = nil, nil, nil, nil
+local SxO = nil
 --local tiamat, hydra = nil, nil
 --local TMready, HRready = nil, nil
 
@@ -42,12 +46,17 @@ end
 
 function OnLoad()
 
+	ts = TargetSelector(TARGET_LOW_HP_PRIORITY, 750)
+	enemyMinions = minionManager(MINION_ENEMY, 600, player, MINION_SORT_HEALTH_ASC)
 	-- menu
+	VP = VPrediction()
+	require "SxOrbWalk"
+	SxO = SxOrbWalk(VP)
 	loadMenu()
 	
 	--GetItem()
 	-- target
-	ts = TargetSelector(TARGET_LOW_HP_PRIORITY, 750)
+	
 
 end
 
@@ -63,11 +72,19 @@ function loadMenu()
 		ConfigY:addSubMenu("draw", "draw")
 			--ConfigY.draw:addParam("drawkillable", "Draw Killable", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.draw:addParam("drawerance", "Draw E rance", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.draw:addParam("drawwrance", "Draw W rance", SCRIPT_PARAM_ONOFF, true)
+			--ConfigY.draw:addParam("drawwrance", "Draw W rance", SCRIPT_PARAM_ONOFF, true)
+		
+		ConfigY:addSubMenu("farming", "farming")
+			ConfigY.farming:addParam("farm", "farm", SCRIPT_PARAM_ONKEYTOGGLE, false, 90)
+			
+		ConfigY:addSubMenu("OrbWalker", "OrbWalker")
+			SxO:LoadToMenu(ConfigY.OrbWalker)
 end
 
 function OnTick()
 	GetSpellStat()
+	enemyMinions:update()
+	farm()
 	--GetItem()
 	if ConfigY.harass.harass then
 		Harass()
@@ -78,6 +95,18 @@ function OnTick()
 	end
 end
 
+function farm()
+	if ConfigY.farming.farming then
+		for index, minion in pairs(enemyMinions.objects) do
+			if Wready and GetDistance(minion, myHero) <= ranceW then
+			local Wdmg = getDmg("W", minion, myHero)
+				if Wdmg >= minion.health then
+					CastSpell(_W, minion)
+				end
+			end
+		end
+	end
+end
 --[[function GetItem()
 	tiamat = GetInventorySlotItem(3077)
 	hydra = GetInventorySlotItem(3074)
