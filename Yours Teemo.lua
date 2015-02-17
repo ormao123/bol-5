@@ -9,14 +9,17 @@ if myHero.charName ~="Teemo" then return end
 local lastAttack, lastWindUpTime, lastAttackCD = 0, 0, 0 --we initalize the variables
 	
 	
+require "SxOrbWalk"
+
 local flash = nil
 local ignite = nil
 local ts
-local version = 1.06
+local version = 1.07
 local Qcasting = false
 local Rcasting = false
 local Player = GetMyHero()
 local EnemyHeroes = GetEnemyHeroes()
+local SxO = nil
 -- rance
 
 local AUTO_UPDATE = true
@@ -65,7 +68,7 @@ local bestshroom =
 
 function OnLoad()
 	
-	print("<font color=\#6699ff\"><b>Yours Teemo:</b></font> <font color=\"#FFFFFF\">OrbWalk is Not Wark. plz use Another OrbWalk</font>")
+	SxO = SxOrbWalk()
     ConfigYT = scriptConfig("yours Teemo", "yoursTeemo")
 		ConfigYT:addSubMenu("combo","combo")
 			ConfigYT.combo:addParam("combohotkey","Combo Hot Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
@@ -73,11 +76,6 @@ function OnLoad()
 			--ConfigYT.combo:addParam("qandaa", "AA after Q", SCRIPT_PARAM_ONOFF, true)
 			ConfigYT.combo:addParam("castw", "Cast W", SCRIPT_PARAM_ONOFF, true)
 			--ConfigYT.combo:addParam("castr", "Cast R", SCRIPT_PARAM_ONOFF, true)
-			
-		ConfigYT:addSubMenu("orbwalk","orbwalk")
-			--ConfigYT.orbwalk:addParam("OWcombomod","Combo Mode", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-			--ConfigYT.orbwalk:addParam("OWlasthit","lasthit", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
-			--ConfigYT.orbwalk:addParam("OWharass","harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 	
 		ConfigYT:addSubMenu("killsteal", "killsteal")
 			ConfigYT.killsteal:addParam("killstealQ", "killsteal Auto Q", SCRIPT_PARAM_ONOFF, true)
@@ -92,6 +90,9 @@ function OnLoad()
 			ConfigYT.draw:addParam("bshroom", "Best shroom Draw", SCRIPT_PARAM_ONOFF, true)
 			ConfigYT.draw:addParam("targetdraw", "Target Draw", SCRIPT_PARAM_ONOFF, false)
 			
+		ConfigYT:addSubMenu("OrbWalker", "OrbWalker")
+			SxO:LoadToMenu(ConfigYT.OrbWalker)
+			
 		ts = TargetSelector(TARGET_LOW_HP_PRIORITY,580)
 end
 
@@ -103,9 +104,6 @@ function OnTick()
 	
 	COMBO()
 	OnDraw()
-	if ConfigYT.orbwalk.OWcombomod then
-		OrbWalk()
-	end
 	harass()
 end
 
@@ -193,43 +191,4 @@ function killsteal()
 			end
 		end
 	end
-end
--- orbwalk
-
-function OrbWalk()
-	ts:update() --our target is teh currently selected one(you can also use the targetselector whatever)
-	if ts.target ~=nil and GetDistance(ts.target) <= AArance then --if it valid then lets go
-		if timeToShoot() then --see code later
-			myHero:Attack(ts.target) --AA
-		elseif heroCanMove() and Qcasting == false then --if we cant attack but we can move
-			moveToCursor() --we move to cursor
-		end
-	else		
-		moveToCursor() --if the target isnt valid we jsut move to cursor
-	end
-end
-
-function OnProcessSpell(object, spell) --if smth happens
-	if object == myHero then --if we are teh owner from teh object
-		if spell.name:lower():find("attack") then --and the name is attack
-			lastAttack = GetTickCount() - GetLatency()/2 --the last attack is GetTickCount, that is the curent time - getlatenxy/2, why 2? because we need the time for the attack client-server and server-client
-			lastWindUpTime = spell.windUpTime*1000 --the lastwinduptime
-			lastAttackCD = spell.animationTime*1000 --and our "cd"
-		end 
-	end
-end
-
-function heroCanMove()
-	return (GetTickCount() + GetLatency()/2 > lastAttack + lastWindUpTime + 20) --if aa on cd, we can move
-end 
- 
-function timeToShoot()
-	return (GetTickCount() + GetLatency()/2 > lastAttack + lastAttackCD) --if aa ready, we can shoot
-end 
-
-function moveToCursor()
-	if GetDistance(mousePos) > 10 then --well not rly much to say 
-		local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*250 --we just move 250 units in direction of our mouse
-		myHero:MoveTo(moveToPos.x, moveToPos.z) --and there we go
-	end 
 end
