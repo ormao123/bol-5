@@ -64,9 +64,9 @@ function LoadMenu()
 			ConfigY.combo:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.combo:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
 			
-		ConfigY:addSubMenu("farm", "farm")
-			ConfigY.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("X"))
-			ConfigY.farm:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
+		--ConfigY:addSubMenu("farm", "farm")
+			--ConfigY.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("X"))
+			--ConfigY.farm:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
 			
 		ConfigY:addSubMenu("harass", "harass")
 			ConfigY.harass:addParam("harasstoggle", "harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("C"))
