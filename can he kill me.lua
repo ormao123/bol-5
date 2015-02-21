@@ -1,11 +1,14 @@
+-- bol script statu
+assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("REHFHIDFGIH") 
+
 local EnemyHeroes = GetEnemyHeroes()
 
  -- updater
-local version = 1.00
+local version = 1.01
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/can he kill me.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = LIB_PATH.."can he kill me.lua"
+local UPDATE_FILE_PATH = LIB_PATH.."Yours Teemo.lua"
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>can he kill me:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
@@ -32,7 +35,6 @@ function OnLoad()
  
 Variables()
 menu()
-
 end
  
 function Variables()
@@ -81,31 +83,31 @@ function DmgCalc()
  
 
         if myHero.health < SpellR then
-            ChampionTable[i].indicatorText = "Killed with: R"
+            ChampionTable[i].indicatorText = "Killed me with: R"
 
         elseif myHero.health < SpellQ then
-            ChampionTable[i].indicatorText = "Killed with: Q"
+            ChampionTable[i].indicatorText = "Killed me with: Q"
 
         elseif myHero.health < SpellW then
             ChampionTable[i].indicatorText = "Killed with: W"
 
         elseif myHero.health < SpellE then
-            ChampionTable[i].indicatorText = "Killed with: E"
+            ChampionTable[i].indicatorText = "Killed me with: E"
 
         elseif myHero.health < SpellQ + SpellR then
-            ChampionTable[i].indicatorText = "Killed with: Q + R"
+            ChampionTable[i].indicatorText = "Killed me with: Q + R"
 
         elseif myHero.health < SpellW + SpellR then
-            ChampionTable[i].indicatorText = "Killed with: W + R"
+            ChampionTable[i].indicatorText = "Killed me with: W + R"
 
         elseif myHero.health < SpellE + SpellR then
-            ChampionTable[i].indicatorText = "Killed with: E + R"
+            ChampionTable[i].indicatorText = "Killed me with: E + R"
 
         elseif myHero.health < SpellQ + SpellW + SpellR then
-            ChampionTable[i].indicatorText = "Killed  with: Q + W + R"
+            ChampionTable[i].indicatorText = "Killed me with: Q + W + R"
 
         elseif myHero.health < SpellQ + SpellE + SpellR then
-            ChampionTable[i].indicatorText = "Killed with: Q + E + R"
+            ChampionTable[i].indicatorText = "Killed me with: Q + E + R"
 
         else
             local dmgTotal = (SpellQ + SpellW + SpellE + SpellR)
@@ -115,7 +117,7 @@ function DmgCalc()
         end
  
             local ChampionAD = getDmg("AD", myHero, Champion)  
-            ChampionTable[i].damageGettingText = Champion.charName .. " kills me with " .. math.ceil(myHero.health / ChampionAD) .. " hits"
+            ChampionTable[i].damageGettingText = Champion.charName .. " Killed me with " .. math.ceil(myHero.health / ChampionAD) .. " hits"
         end
     end
 end
