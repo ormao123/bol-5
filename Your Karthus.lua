@@ -18,7 +18,7 @@ require "VPrediction"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -55,7 +55,7 @@ function OnLoad()
 	DamageCalculator:RegisterDamageSource(_Q, _MAGIC, 40, 20, _MAGIC, _AP, 0.30, myHero:CanUseSpell(_Q) == READY)
 			
 	ts = TargetSelector(TARGET_LOW_HP_PRIORITY,wRange,DAMAGE_MAGIC, false)
-	EnemyMinions = minionManager(MINION_ENEMY, 875, myHero, MINION_SORT_MAXHEALTH_DEC)
+	enemyMinions = minionManager(MINION_ENEMY, 875, myHero, MINION_SORT_MAXHEALTH_DEC)
 end
 
 function LoadMenu()
@@ -66,9 +66,9 @@ function LoadMenu()
 			ConfigY.combo:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.combo:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
 			
-		--ConfigY:addSubMenu("farm", "farm")
-			--ConfigY.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("X"))
-			--ConfigY.farm:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
+		ConfigY:addSubMenu("farm", "farm")
+			ConfigY.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
+			ConfigY.farm:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
 			
 		ConfigY:addSubMenu("harass", "harass")
 			ConfigY.harass:addParam("harasstoggle", "harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("C"))
@@ -96,6 +96,7 @@ function OnTick()
 	OnHarass()
 	OnSpellcheck()
 	killsteal()
+	Farm()
 end
 
 function OnCombo()
@@ -187,26 +188,24 @@ function OnDraw()
 end
 
 function killsteal()
-		local i, Champion
-		for i, Champion in pairs(EnemyHeroes) do
-			if ValidTarget(Champion) then
-				if getDmg("R", Champion, myHero) > Champion.health and ConfigY.killsteal.killstealr then
-					print(Champion.."Can kill with R")
-					CastSpell(_R)
-				end
+	local i, Champion
+	for i, Champion in pairs(EnemyHeroes) do
+		if ValidTarget(Champion) then
+			if getDmg("R", Champion, myHero) > Champion.health and ConfigY.killsteal.killstealr then
+				print(Champion.."Can kill with R")
+				CastSpell(_R)
 			end
 		end
 	end
+end
 
 
 function Farm()
-	EnemyMinions:update()
 	if ConfigY.farm.farm then
-		for i, Minion in pairs(EnemyMinions.objects) do
-			if ValidTarget(Minion) then
-				if Qready and DamageCalculator:IsKillable(Minion,{_Q}) then
-					CastSpell(_Q, minion)
-				end
+		enemyMinions:update()
+		for i, minion in ipairs(enemyMinions.objects) do
+			if ValidTarget(minion) and GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero) > minion.health and ConfigY.farm.useq then
+				CastSpell(_Q, minion)
 			end
 		end
 	end
