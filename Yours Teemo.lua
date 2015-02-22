@@ -1,7 +1,4 @@
---[[
-	update note
-	1.06 | Add Harass
-]]
+
 
 
 if myHero.charName ~="Teemo" then return end
