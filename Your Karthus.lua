@@ -18,7 +18,7 @@ require "VPrediction"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.02
+local version = 1.03
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -63,8 +63,10 @@ function LoadMenu()
 		ConfigY:addSubMenu("combo", "combo")
 			ConfigY.combo:addParam("activecombo", "combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 			ConfigY.combo:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
+			ConfigY.combo:addParam("perq", "Until % use Q", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
 			ConfigY.combo:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.combo:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
+			ConfigY.combo:addParam("pere", "Until % use W", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 			
 		ConfigY:addSubMenu("farm", "farm")
 			ConfigY.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
@@ -73,6 +75,7 @@ function LoadMenu()
 		ConfigY:addSubMenu("harass", "harass")
 			ConfigY.harass:addParam("harasstoggle", "harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("C"))
 			ConfigY.harass:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
+			ConfigY.harass:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 			--ConfigY.harass:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
 			--ConfigY.harass:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
 			
@@ -80,6 +83,9 @@ function LoadMenu()
 			ConfigY.killsteal:addParam("killstealr", "Killsteal R Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("T"))
 			--ConfigY.killsteal:addParam("killstealq", "Killsteal Q Toggle", SCRIPT_PARAM_ONOFF, true)
 			--ConfigY.killsteal:addParam("killstealhitchance", "Killsteal hit chance", SCRIPT_PARAM_LIST, 1, {"1", "2", "3", "4", "5"})
+			
+		ConfigY:addSubMenu("ads", "ads")
+			ConfigY.ads:addParam("adsr", "Use R After You dead", SCRIPT_PARAM_ONOFF, true)
 			
 		ConfigY:addSubMenu("draw", "draw")
 			ConfigY.draw:addParam("drawq", "draw Q", SCRIPT_PARAM_ONOFF, true)
@@ -106,7 +112,7 @@ function OnCombo()
 			for i, target in pairs(GetEnemyHeroes()) do
 				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 100, 875)
 				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 then
-					if Qready and ConfigY.combo.useq then
+					if Qready and ConfigY.combo.useq and myHero.mana > (myHero.maxMana*(ConfigY.combo.perq*0.01)) then
 						CastSpell(_Q, CastPosition.x, CastPosition.z)
 					end
 				end
@@ -119,7 +125,7 @@ function OnCombo()
 				end
 				
 				if GetDistance(ts.target, myHero) <= 550 then
-					if useingE == false and Eready then
+					if useingE == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
 						CastSpell(_E)
 						useingE = true
 					end
@@ -127,6 +133,9 @@ function OnCombo()
 				
 				if GetDistance(ts.target, myHero) > 550 and Eready then
 					if useingE then
+						CastSpell(_E)
+						useingE = false
+					elseif myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
 						CastSpell(_E)
 						useingE = false
 					end
@@ -141,7 +150,7 @@ function OnHarass()
 		for i, target in pairs(GetEnemyHeroes()) do
 			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, 0.5, 100, 875)
 			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 then
-				if Qready and ConfigY.harass.useq then
+				if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
 			end
@@ -209,4 +218,12 @@ function Farm()
 			end
 		end
 	end
+end
+
+function OnApplyBuff(source, unit, buff)
+    if unit and unit.isMe and buff.name == "KarthusDeathDefiedbuff" then 
+		if ConfigY.ads.adsr then
+			CastSpell(_R)
+		end
+    end
 end
