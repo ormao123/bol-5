@@ -8,7 +8,11 @@ local eRange = 425
 
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 local useingE = false
-
+local EActive = false
+local recall = false
+local j, CanKillChampion
+	local status
+	
 local ts
 local VP, SxO = nil, nil
 
@@ -18,7 +22,7 @@ require "VPrediction"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.03
+local version = 1.04
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -80,7 +84,7 @@ function LoadMenu()
 			--ConfigY.harass:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
 			
 		ConfigY:addSubMenu("killsteal", "killsteal")
-			ConfigY.killsteal:addParam("killstealr", "Killsteal R Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("T"))
+			ConfigY.killsteal:addParam("killstealmark", "Killsteal Mark", SCRIPT_PARAM_ONOFF, true)
 			--ConfigY.killsteal:addParam("killstealq", "Killsteal Q Toggle", SCRIPT_PARAM_ONOFF, true)
 			--ConfigY.killsteal:addParam("killstealhitchance", "Killsteal hit chance", SCRIPT_PARAM_LIST, 1, {"1", "2", "3", "4", "5"})
 			
@@ -101,7 +105,6 @@ function OnTick()
 	OnCombo()
 	OnHarass()
 	OnSpellcheck()
-	killsteal()
 	Farm()
 end
 
@@ -124,20 +127,15 @@ function OnCombo()
 					end
 				end
 				
-				if GetDistance(ts.target, myHero) <= 550 then
-					if useingE == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
-						CastSpell(_E)
-						useingE = true
-					end
+				if CountEnemyHeroInRange(WRange) >= 1 and EActive == false and Eready then
+					CastSpell(_E)
 				end
 				
-				if GetDistance(ts.target, myHero) > 550 and Eready then
+				if CountEnemyHeroInRange(WRange) == 0 and EActive and Eready then
 					if useingE then
 						CastSpell(_E)
-						useingE = false
 					elseif myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
 						CastSpell(_E)
-						useingE = false
 					end
 				end
 			end
@@ -150,7 +148,7 @@ function OnHarass()
 		for i, target in pairs(GetEnemyHeroes()) do
 			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, 0.5, 100, 875)
 			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 then
-				if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
+				if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) and recall == false then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
 			end
@@ -194,20 +192,27 @@ function OnDraw()
 	if ConfigY.draw.drawe then
 		DrawCircle(myHero.x, myHero.y, myHero.z, 475, 0xFFFFFFff)
 	end
-end
-
-function killsteal()
-	local i, Champion
-	for i, Champion in pairs(EnemyHeroes) do
-		if ValidTarget(Champion) then
-			if getDmg("R", Champion, myHero) > Champion.health and ConfigY.killsteal.killstealr then
-				print(Champion.."Can kill with R")
-				CastSpell(_R)
+	if ConfigY.killsteal.killstealmark then
+		for j, CanKillChampion in pairs(EnemyHeroes) do
+			if ValidTarget(CanKillChampion) then
+				if stat(CanKillChampion) == "Can" then
+					DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, 100, 100+j*20, 0xFFFF0000) 
+				else
+					DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, 100, 100+j*20, 0xFFFFFF00) 
+				end
 			end
 		end
 	end
 end
 
+function stat(unit)
+	if getDmg("R", unit, myHero) > unit.health then
+		status = "Can"
+	else
+		status = "Cant"
+	end
+	return status
+end
 
 function Farm()
 	if ConfigY.farm.farm then
@@ -221,9 +226,19 @@ function Farm()
 end
 
 function OnApplyBuff(source, unit, buff)
-    if unit and unit.isMe and buff.name == "KarthusDeathDefiedbuff" then 
-		if ConfigY.ads.adsr then
-			CastSpell(_R)
-		end
+	if unit and unit.isMe and buff.name == "KarthusDefile" then 
+		EActive = true
+    end
+	if unit and unit.isMe and buff.name == "recall" then 
+		recall = true
+    end
+end
+
+function OnRemoveBuff(unit, buff)
+    if unit and unit.isMe and buff.name == "KarthusDefile" then 
+        EActive = false
+    end
+	if unit and unit.isMe and buff.name == "recall" then 
+		recall = false
     end
 end
