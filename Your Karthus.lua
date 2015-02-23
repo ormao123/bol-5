@@ -22,7 +22,7 @@ require "VPrediction"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.04
+local version = 1.05
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -67,19 +67,22 @@ function LoadMenu()
 		ConfigY:addSubMenu("combo", "combo")
 			ConfigY.combo:addParam("activecombo", "combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 			ConfigY.combo:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.combo:addParam("perq", "Until % use Q", SCRIPT_PARAM_SLICE, 20, 0, 100, 0)
+			ConfigY.combo:addParam("perq", "Until % use Q", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
 			ConfigY.combo:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.combo:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.combo:addParam("pere", "Until % use W", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+			ConfigY.combo:addParam("pere", "Until % use W", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
 			
 		ConfigY:addSubMenu("farm", "farm")
-			ConfigY.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
+			ConfigY.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
 			ConfigY.farm:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
 			
 		ConfigY:addSubMenu("harass", "harass")
-			ConfigY.harass:addParam("harasstoggle", "harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("C"))
+			ConfigY.harass:addParam("harassactive", "harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+			ConfigY.harass:addParam("harasstoggle", "harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("X"))
 			ConfigY.harass:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.harass:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+			ConfigY.harass:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
+			ConfigY.harass:addParam("pere", "Until % E", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 			--ConfigY.harass:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
 			--ConfigY.harass:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
 			
@@ -114,29 +117,27 @@ function OnCombo()
 		if ConfigY.combo.activecombo then
 			for i, target in pairs(GetEnemyHeroes()) do
 				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 100, 875)
-				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 then
-					if Qready and ConfigY.combo.useq and myHero.mana > (myHero.maxMana*(ConfigY.combo.perq*0.01)) then
+				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and target.dead == false then
+					if Qready and ConfigY.combo.useq and myHero.mana < (myHero.maxMana*(ConfigY.combo.perq*0.01)) then
 						CastSpell(_Q, CastPosition.x, CastPosition.z)
 					end
 				end
 				
 				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 10, 1000)
 				if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
-					if Qready and ConfigY.combo.useq then
+					if Wready and ConfigY.combo.usew then
 						CastSpell(_W, CastPosition.x, CastPosition.z)
 					end
 				end
 				
-				if CountEnemyHeroInRange(WRange) >= 1 and EActive == false and Eready then
+				if CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
 					CastSpell(_E)
 				end
 				
-				if CountEnemyHeroInRange(WRange) == 0 and EActive and Eready then
-					if useingE then
-						CastSpell(_E)
-					elseif myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
-						CastSpell(_E)
-					end
+				if CountEnemyHeroInRange(eRange) == 0 and EActive and Eready then
+					CastSpell(_E)
+				elseif myHero.mana < (myHero.maxMana*(ConfigY.combo.pere*0.01)) and EActive and Eready then
+					CastSpell(_E)
 				end
 			end
 		end
@@ -144,12 +145,21 @@ function OnCombo()
 end
 
 function OnHarass()
-	if ConfigY.harass.harasstoggle then
+	if ConfigY.harass.harasstoggle and recall == false or ConfigY.harass.harassactive then
 		for i, target in pairs(GetEnemyHeroes()) do
 			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, 0.5, 100, 875)
-			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 then
-				if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) and recall == false then
+			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and target.dead == false then
+				if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
+				end
+				if ConfigY.harass.usee and CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.harass.pere*0.01)) then
+					CastSpell(_E)
+				end
+				
+				if CountEnemyHeroInRange(eRange) == 0 and EActive and Eready then
+					CastSpell(_E)
+				elseif myHero.mana < (myHero.maxMana*(ConfigY.harass.pere*0.01)) and EActive and Eready then
+					CastSpell(_E)
 				end
 			end
 		end
@@ -218,7 +228,7 @@ function Farm()
 	if ConfigY.farm.farm then
 		enemyMinions:update()
 		for i, minion in ipairs(enemyMinions.objects) do
-			if ValidTarget(minion) and GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero) > minion.health and ConfigY.farm.useq then
+			if ValidTarget(minion) and GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero)/1.5 > minion.health and ConfigY.farm.useq then
 				CastSpell(_Q, minion)
 			end
 		end
