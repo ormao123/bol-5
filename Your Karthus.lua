@@ -22,7 +22,7 @@ require "VPrediction"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.05
+local version = 1.06
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -67,7 +67,6 @@ function LoadMenu()
 		ConfigY:addSubMenu("combo", "combo")
 			ConfigY.combo:addParam("activecombo", "combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 			ConfigY.combo:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.combo:addParam("perq", "Until % use Q", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
 			ConfigY.combo:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.combo:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.combo:addParam("pere", "Until % use W", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
@@ -118,7 +117,7 @@ function OnCombo()
 			for i, target in pairs(GetEnemyHeroes()) do
 				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 100, 875)
 				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and target.dead == false then
-					if Qready and ConfigY.combo.useq and myHero.mana < (myHero.maxMana*(ConfigY.combo.perq*0.01)) then
+					if Qready and ConfigY.combo.useq then
 						CastSpell(_Q, CastPosition.x, CastPosition.z)
 					end
 				end
