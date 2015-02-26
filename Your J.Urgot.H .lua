@@ -1,6 +1,9 @@
 --[[
 	update 1.02
 	Fix Harass Mode
+	
+	update 1.03
+	use Q without E
 ]]
 
 
@@ -18,7 +21,7 @@ local enemyMinions
 local VP, SxO = nil, nil
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 
-local version = 1.02
+local version = 1.03
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your J.Urgot.H.lua".."?rand="..math.random(1,10000)
@@ -130,6 +133,11 @@ function Combo()
 				if HitChance >= 2 and GetDistance(CastPosition) < 1200 then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
+			end
+		elseif ts.target ~= nil and Ehit(ts.target) == false and Eready == false and Qready then
+			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(ts.target, 0.5, 75, 1200, 1500, myHero, true)
+			if HitChance >= 2 and GetDistance(CastPosition) < 1200 then
+				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
 	end
