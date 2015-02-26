@@ -1,3 +1,11 @@
+--[[
+	update 1.02
+	Fix Harass Mode
+]]
+
+
+
+
 if myHero.charName ~= "Urgot" then return end
 
 require "VPrediction"
@@ -10,7 +18,7 @@ local enemyMinions
 local VP, SxO = nil, nil
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your J.Urgot.H.lua".."?rand="..math.random(1,10000)
@@ -130,7 +138,7 @@ end
 function harass()
 	if Config.harass.harassactive and myHero.mana > (myHero.maxMana*(Config.harass.harassper*0.01)) then
 		ts:update()
-		if Config.harass.usee and Eready then
+		if Config.harass.usee and Eready and ts.target ~= nil then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(ts.target, 0.8, 75, 1200, 1500, myHero, true)
 			if HitChance >= 2 and GetDistance(CastPosition) < 900 then
 				CastSpell(_E, CastPosition.x, CastPosition.z)
