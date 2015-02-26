@@ -1,3 +1,9 @@
+--[[
+	Changelog
+	1.02 -- Add Harass Toggle
+]]
+
+
 if myHero.charName ~= "DrMundo" then return end
 
 require "VPrediction"
@@ -10,7 +16,7 @@ local SxO, VP = nil, nil
 local QRange, WRange, ERange, RRange = 1000, 320, 225, 0
 local WActive = false
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Mundo.lua".."?rand="..math.random(1,10000)
@@ -70,6 +76,7 @@ function LoadMenu()
 			Config.combo:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
 			
 		Config:addSubMenu("harass", "harass")
+			Config.harass:addParam("harasstoggle", "harass", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("X"))
 			Config.harass:addParam("harass", "harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
 			Config.harass:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		
@@ -106,7 +113,7 @@ function Farm()
 end
 
 function Harass()
-	if Config.harass.harass then
+	if Config.harass.harass or Config.harass.harasstoggle then
 		if ValidTarget(ts.target, QRange) and myHero:CanUseSpell(_Q) == READY then
 			for i, target in pairs(GetEnemyHeroes()) do
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(ts.target, 0.5, 75, 1000, 1500, myHero, true)
