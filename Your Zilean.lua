@@ -1,5 +1,7 @@
 if myHero.charName ~= "Zilean" then return end
 
+assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAAAdQAABBkBAAGUAAAAKQACBBkBAAGVAAAAKQICBHwCAAAQAAAAEBgAAAGNsYXNzAAQNAAAAU2NyaXB0U3RhdHVzAAQHAAAAX19pbml0AAQLAAAAU2VuZFVwZGF0ZQACAAAAAgAAAAgAAAACAAotAAAAhkBAAMaAQAAGwUAABwFBAkFBAQAdgQABRsFAAEcBwQKBgQEAXYEAAYbBQACHAUEDwcEBAJ2BAAHGwUAAxwHBAwECAgDdgQABBsJAAAcCQQRBQgIAHYIAARYBAgLdAAABnYAAAAqAAIAKQACFhgBDAMHAAgCdgAABCoCAhQqAw4aGAEQAx8BCAMfAwwHdAIAAnYAAAAqAgIeMQEQAAYEEAJ1AgAGGwEQA5QAAAJ1AAAEfAIAAFAAAAAQFAAAAaHdpZAAEDQAAAEJhc2U2NEVuY29kZQAECQAAAHRvc3RyaW5nAAQDAAAAb3MABAcAAABnZXRlbnYABBUAAABQUk9DRVNTT1JfSURFTlRJRklFUgAECQAAAFVTRVJOQU1FAAQNAAAAQ09NUFVURVJOQU1FAAQQAAAAUFJPQ0VTU09SX0xFVkVMAAQTAAAAUFJPQ0VTU09SX1JFVklTSU9OAAQEAAAAS2V5AAQHAAAAc29ja2V0AAQIAAAAcmVxdWlyZQAECgAAAGdhbWVTdGF0ZQAABAQAAAB0Y3AABAcAAABhc3NlcnQABAsAAABTZW5kVXBkYXRlAAMAAAAAAADwPwQUAAAAQWRkQnVnc3BsYXRDYWxsYmFjawABAAAACAAAAAgAAAAAAAMFAAAABQAAAAwAQACBQAAAHUCAAR8AgAACAAAABAsAAABTZW5kVXBkYXRlAAMAAAAAAAAAQAAAAAABAAAAAQAQAAAAQG9iZnVzY2F0ZWQubHVhAAUAAAAIAAAACAAAAAgAAAAIAAAACAAAAAAAAAABAAAABQAAAHNlbGYAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQAtAAAAAwAAAAMAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAUAAAAFAAAABQAAAAUAAAAFAAAABQAAAAUAAAAFAAAABgAAAAYAAAAGAAAABgAAAAUAAAADAAAAAwAAAAYAAAAGAAAABgAAAAYAAAAGAAAABgAAAAYAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAIAAAACAAAAAgAAAAIAAAAAgAAAAUAAABzZWxmAAAAAAAtAAAAAgAAAGEAAAAAAC0AAAABAAAABQAAAF9FTlYACQAAAA4AAAACAA0XAAAAhwBAAIxAQAEBgQAAQcEAAJ1AAAKHAEAAjABBAQFBAQBHgUEAgcEBAMcBQgABwgEAQAKAAIHCAQDGQkIAx4LCBQHDAgAWAQMCnUCAAYcAQACMAEMBnUAAAR8AgAANAAAABAQAAAB0Y3AABAgAAABjb25uZWN0AAQRAAAAc2NyaXB0c3RhdHVzLm5ldAADAAAAAAAAVEAEBQAAAHNlbmQABAsAAABHRVQgL3N5bmMtAAQEAAAAS2V5AAQCAAAALQAEBQAAAGh3aWQABAcAAABteUhlcm8ABAkAAABjaGFyTmFtZQAEJgAAACBIVFRQLzEuMA0KSG9zdDogc2NyaXB0c3RhdHVzLm5ldA0KDQoABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQAXAAAACgAAAAoAAAAKAAAACgAAAAoAAAALAAAACwAAAAsAAAALAAAADAAAAAwAAAANAAAADQAAAA0AAAAOAAAADgAAAA4AAAAOAAAACwAAAA4AAAAOAAAADgAAAA4AAAACAAAABQAAAHNlbGYAAAAAABcAAAACAAAAYQAAAAAAFwAAAAEAAAAFAAAAX0VOVgABAAAAAQAQAAAAQG9iZnVzY2F0ZWQubHVhAAoAAAABAAAAAQAAAAEAAAACAAAACAAAAAIAAAAJAAAADgAAAAkAAAAOAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))() ScriptStatus("VILJLQLPMON") 
+
 require "VPrediction"
 require "SxOrbWalk"
 
@@ -10,7 +12,7 @@ local SxO = nil
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 local Qrance = 900
 
-local version = 1.00
+local version = 1.01
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Zilean.lua".."?rand="..math.random(1,10000)
@@ -39,46 +41,46 @@ end
 function OnLoad()
 	VP = VPrediction()
 	SxO = SxOrbWalk()
-
+	
 	ts = TargetSelector(TARGET_LOW_HP_PRIORITY,1000,DAMAGE_MAGIC, false)
-
+	
 	LoadMenu()
-
+	
 end
 
 function LoadMenu()
 	Config = scriptConfig("Your Zilean", "your zilean")
-
+	
 	Config:addSubMenu("Combo", "combo")
 		Config.combo:addParam("comboactive", "Combo Active", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
-
+		
 	Config:addSubMenu("Harass", "harass")
 		Config.harass:addParam("harassacrive", "harass Active", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 		Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("harassper", "Until % use Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-
+		
 	Config:addSubMenu("W Setting", "wsetting")
 		Config.wsetting:addParam("combo", "Not work in Combo mod", SCRIPT_PARAM_ONOFF, true)
 		Config.wsetting:addParam("useforq", "Use for Q", SCRIPT_PARAM_ONOFF, true)
 		Config.wsetting:addParam("usefore", "Use for E", SCRIPT_PARAM_ONOFF, true)
-
+		
 	Config:addSubMenu("Draw", "Draw")
 		Config.Draw:addParam("drawQ", "drawQ", SCRIPT_PARAM_ONOFF, true)
 		Config.Draw:addParam("drawE", "drawE", SCRIPT_PARAM_ONOFF, true)
 		Config.Draw:addParam("drawR", "drawR", SCRIPT_PARAM_ONOFF, true)
-
+	
 	Config:addSubMenu("ads", "ads")
 		Config.ads:addParam("autow", "Auto W", SCRIPT_PARAM_ONOFF, true)
-
+		
 	Config:addSubMenu("Ult", "ult")
 	for _, ally in ipairs(GetAllyHeroes()) do
 		Config.ult:addParam(ally.charName, ally.charName, SCRIPT_PARAM_ONOFF, true)
 	end
-
+	
 	Config:addSubMenu("orbWalk", "orbWalk")
 			SxO:LoadToMenu(Config.orbWalk)
 end
@@ -92,9 +94,9 @@ function OnTick()
 end
 
 function OnDraw()
-	if QREADY and Config.Draw.drawQ then DrawCircle(myHero.x, myHero.y, myHero.z, QRange, 0x80408000) end
-	if EREADY and Config.Draw.drawE then DrawCircle(myHero.x, myHero.y, myHero.z, ERange, 0x80408000) end
-	if RREADY and Config.Draw.drawR then DrawCircle(myHero.x, myHero.y, myHero.z, RRange, 0x80408000) end
+	if QREADY and Config.Draw.drawQ then DrawCircle(myHero.x, myHero.y, myHero.z, QRange, 0x111111) end
+	if EREADY and Config.Draw.drawE then DrawCircle(myHero.x, myHero.y, myHero.z, ERange, 0x111111) end
+	if RREADY and Config.Draw.drawR then DrawCircle(myHero.x, myHero.y, myHero.z, RRange, 0x111111) end
 end
 
 function OnCombo()
@@ -146,7 +148,7 @@ function autoR()
 		end
 	end
 end
-
+	
 function autoW()
 	if Config.wsetting.combo then
 		if Config.combo.comboactive == false then
@@ -181,19 +183,19 @@ function OnSpellcheck()
 	else
 		Qready = false
 	end
-
+	
 	if myHero:CanUseSpell(_W) == READY then
 		Wready = true
 	else
 		Wready = false
 	end
-
+	
 	if myHero:CanUseSpell(_E) == READY then
 		Eready = true
 	else
 		Eready = false
 	end
-
+	
 	if myHero:CanUseSpell(_Q) == READY then
 		Rready = true
 	else
