@@ -11,7 +11,7 @@ local useingE = false
 local EActive = false
 local recall = false
 local j, CanKillChampion
-	local status
+local status
 	
 local ts
 local VP, SxO = nil, nil
