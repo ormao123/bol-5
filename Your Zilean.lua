@@ -1,3 +1,12 @@
+--[[
+	Changelog
+	v. 1.02
+	SomeFix error
+	Add auto Q stun
+]]
+
+
+
 if myHero.charName ~= "Zilean" then return end
 
 assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("VILJLQLPMON") 
@@ -12,7 +21,7 @@ local SxO = nil
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 local Qrance = 900
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Zilean.lua".."?rand="..math.random(1,10000)
@@ -58,13 +67,12 @@ function LoadMenu()
 		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		
 	Config:addSubMenu("Harass", "harass")
-		Config.harass:addParam("harassacrive", "harass Active", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+		Config.harass:addParam("harassactive", "harass Active", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 		Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("harassper", "Until % use Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		
 	Config:addSubMenu("W Setting", "wsetting")
-		Config.wsetting:addParam("combo", "Not work in Combo mod", SCRIPT_PARAM_ONOFF, true)
 		Config.wsetting:addParam("useforq", "Use for Q", SCRIPT_PARAM_ONOFF, true)
 		Config.wsetting:addParam("usefore", "Use for E", SCRIPT_PARAM_ONOFF, true)
 		
@@ -75,6 +83,7 @@ function LoadMenu()
 	
 	Config:addSubMenu("ads", "ads")
 		Config.ads:addParam("autow", "Auto W", SCRIPT_PARAM_ONOFF, true)
+		Config.ads:addParam("autoqstun", "Auto Q Stun", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("G"))
 		
 	Config:addSubMenu("Ult", "ult")
 	for _, ally in ipairs(GetAllyHeroes()) do
@@ -91,12 +100,14 @@ function OnTick()
 	OnHarass()
 	autoW()
 	autoR()
+	OnDraw()
+	AutoQstun()
 end
 
 function OnDraw()
-	if QREADY and Config.Draw.drawQ then DrawCircle(myHero.x, myHero.y, myHero.z, QRange, 0x111111) end
-	if EREADY and Config.Draw.drawE then DrawCircle(myHero.x, myHero.y, myHero.z, ERange, 0x111111) end
-	if RREADY and Config.Draw.drawR then DrawCircle(myHero.x, myHero.y, myHero.z, RRange, 0x111111) end
+	if Qready and Config.Draw.drawQ then DrawCircle(myHero.x, myHero.y, myHero.z, 900, 0x111111) end
+	if Eready and Config.Draw.drawE then DrawCircle(myHero.x, myHero.y, myHero.z, 550, 0x111111) end
+	if Rready and Config.Draw.drawR then DrawCircle(myHero.x, myHero.y, myHero.z, 780, 0x111111) end
 end
 
 function OnCombo()
@@ -119,17 +130,32 @@ end
 
 function OnHarass()
 	ts:update()
-	if Config.harass.harassacrive then
+	if Config.harass.harassactive then
 		if Config.harass.harassper and ts.target ~= nil then
 			if Eready and Config.harass.usee then
 				CastSpell(_E, ts.target)
 			end
 			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 150, Qrance)
-			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < Qrance and target.dead == false then
+			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < Qrance and ts.target.dead == false then
 				if Qready and Config.harass.useq then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
 			end
+		end
+	end
+end
+
+function AutoQstun()
+	if Config.ads.autoqstun then
+		ts:update()
+		local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 150, Qrance)
+		if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < Qrance and ts.target.dead == false then
+			if Qready then
+				CastSpell(_Q, CastPosition.x, CastPosition.z)
+			end
+		end
+		if Wready then
+			CastSpell(_W)
 		end
 	end
 end
@@ -155,10 +181,6 @@ function autoW()
 			if Qready == false or Eready == false then
 				CastSpell(_W)
 			end
-		end
-	else
-		if Qready == false or Eready == false then
-			CastSpell(_W)
 		end
 	end
 end
