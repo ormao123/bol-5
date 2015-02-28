@@ -122,7 +122,7 @@ end
 function OnTick()
 	Combo()
 	Harass()
-	ks()
+	--ks()
 end
 
 function ks()
