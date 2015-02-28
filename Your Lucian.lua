@@ -3,7 +3,7 @@ if myHero.charName ~= "Lucian" then return end
 require "VPrediction"
 require "SxOrbWalk"
 
-local version = 0.1
+local version = 0.2
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Lucian.lua".."?rand="..math.random(1,10000)
@@ -89,7 +89,7 @@ end
 
 local function CastW(unit)
 	local CastPosition, HitChance, Position = VP:GetLineCastPosition(unit, WDelay, WWidth, WRange, WSpeed, Player, true)
-	if CastPosition and HitChance >= 2 and GetDistance(CastPosition, Player) <= WRange then
+	if CastPosition and HitChance >= 1 and GetDistance(CastPosition, Player) <= WRange then
 		CastSpell(_W, CastPosition.x, CastPosition.z)
 	end
 end
@@ -155,15 +155,15 @@ function Combo()
 		ts:update()
 		Target = SxO:GetTarget()
 		if Target ~= nil then
-			if buffcheck() == false then
-				if myHero:CanUseSpell(_Q) == READY and Menu.combo.useq then
-					CastQ(Target)
-				elseif myHero:CanUseSpell(_W) == READY and Menu.combo.usew then
-					CastW(Target)
-				end
-			else
-				DelayAction(function() myHero:Attack(Target) end, 0.5)
+			if GetDistance(Target, Player) <= QRange and myHero:CanUseSpell(_Q) == READY and Menu.combo.useq and buffcheck() == false then
+				DelayAction(function() CastQ(Target) end, 0.5)
+				SxO:ResetAA()
 			end
+			if myHero:CanUseSpell(_W) == READY and Menu.combo.usew and buffcheck() == false then
+				DelayAction(function() CastW(Target) end, 0.5)
+				SxO:ResetAA()
+			end
+			
 		end
 	end
 end
