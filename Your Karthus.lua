@@ -11,7 +11,7 @@ local useingE = false
 local EActive = false
 local recall = false
 local j, CanKillChampion
-local status
+	local status
 	
 local ts
 local VP, SxO = nil, nil
@@ -22,7 +22,7 @@ require "VPrediction"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.06
+local version = 1.07
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -129,13 +129,13 @@ function OnCombo()
 					end
 				end
 				
-				if CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
+				if CountEnemyHeroInRange(eRange) >= 1 and EActive() == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
 					CastSpell(_E)
 				end
 				
-				if CountEnemyHeroInRange(eRange) == 0 and EActive and Eready then
+				if CountEnemyHeroInRange(eRange) == 0 and EActive() and Eready then
 					CastSpell(_E)
-				elseif myHero.mana < (myHero.maxMana*(ConfigY.combo.pere*0.01)) and EActive and Eready then
+				elseif myHero.mana < (myHero.maxMana*(ConfigY.combo.pere*0.01)) and EActive() and Eready then
 					CastSpell(_E)
 				end
 			end
@@ -144,20 +144,20 @@ function OnCombo()
 end
 
 function OnHarass()
-	if ConfigY.harass.harasstoggle and recall == false or ConfigY.harass.harassactive then
+	if ConfigY.harass.harasstoggle and recall() == false or ConfigY.harass.harassactive then
 		for i, target in pairs(GetEnemyHeroes()) do
 			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, 0.5, 100, 875)
 			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and target.dead == false then
 				if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
-				if ConfigY.harass.usee and CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.harass.pere*0.01)) then
+				if ConfigY.harass.usee and CountEnemyHeroInRange(eRange) >= 1 and EActive() == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.harass.pere*0.01)) then
 					CastSpell(_E)
 				end
 				
-				if CountEnemyHeroInRange(eRange) == 0 and EActive and Eready then
+				if CountEnemyHeroInRange(eRange) == 0 and EActive() and Eready then
 					CastSpell(_E)
-				elseif myHero.mana < (myHero.maxMana*(ConfigY.harass.pere*0.01)) and EActive and Eready then
+				elseif myHero.mana < (myHero.maxMana*(ConfigY.harass.pere*0.01)) and EActive() and Eready then
 					CastSpell(_E)
 				end
 			end
@@ -250,4 +250,12 @@ function OnRemoveBuff(unit, buff)
 	if unit and unit.isMe and buff.name == "recall" then 
 		recall = false
     end
+end
+
+function EActive()
+  return TargetHaveBuff("lucianpassivebuff", myHero)
+end
+
+function recall()
+  return TargetHaveBuff("recall", myHero)
 end
