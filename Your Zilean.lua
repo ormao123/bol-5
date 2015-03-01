@@ -3,6 +3,9 @@
 	v. 1.02
 	SomeFix error
 	Add auto Q stun
+	
+	v. 1.03
+	Add Feedhack
 ]]
 
 
@@ -21,7 +24,7 @@ local SxO = nil
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 local Qrance = 900
 
-local version = 1.02
+local version = 1.03
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Zilean.lua".."?rand="..math.random(1,10000)
@@ -122,7 +125,7 @@ function OnCombo()
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
-		if Wready and Config.combo.usew then
+		if Wready and not Qready and Config.combo.usew then
 			CastSpell(_W)
 		end
 	end
@@ -149,7 +152,7 @@ function AutoQstun()
 	if Config.ads.autoqstun then
 		ts:update()
 		local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 150, Qrance)
-		if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < Qrance and ts.target.dead == false then
+		if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < Qrance and ts.target ~= nil and ts.target.dead == false then
 			if Qready then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
