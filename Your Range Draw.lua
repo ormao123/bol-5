@@ -1,7 +1,7 @@
 --[[
 	Your Range Draw
 ]]
-local version = 0.1
+local version = 0.15
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Range Draw.lua".."?rand="..math.random(1,10000)
@@ -50,6 +50,17 @@ local Champ = {
 	['Rumble'] = {AA = 125, Q = 600, W = 0, E = 1000,R = 1700},
 	['Renekton'] = {AA = 125, Q = 450, W = 550, E = 550,R = 0},
 	['Leona'] = {AA = 125, Q = 0, W = 450, E = 700,R = 0},
+	['RekSai'] = {AA = 175, Q = 325, W = 1650, E = 0,R = 0},
+	--['Rengar'] = {AA = 125, Q = 0, W = , E = ,R = 0},
+	['Lucian'] = {AA = 500, Q = 500, W = 1000, E = 445,R = 1400},
+	--['Lulu'] = {AA = 550, Q = 925, W = , E = ,R = },
+	['LeBlanc'] = {AA = 525, Q = 700, W = 600, E = 950,R = 0},
+	['LeeSin'] = {AA = 125, Q = 1000, W = 700, E = 350,R = 375},
+	['Riven'] = {AA = 125, Q = ,275 W = 250, E = 325,R = 0},
+	--['Lissandra'] = {AA = 550, Q = 725, W = 0, E = 1050,R = 0},
+	['MasterYi'] = {AA = 125, Q = 600, W = 0, E = 0,R = 0},
+	['Maokai'] = {AA = 125, Q = 700, W = 525, E = 1100,R = 425},
+	['Malzahar'] = {AA = 550, Q = 900, W = 800, E = 650,R = 700},
 }
 
 function OnLoad()
@@ -63,19 +74,19 @@ function OnDraw()
 			if GetDistance(myHero, myHero) < 1500 then
 				if menu.draw.mychamp.draw then
 					if menu.draw.mychamp.aa then
-						DrawCircle(myHero.x, myHero.y, myHero.z, range.AA, 0xFFFFCC)
+						DrawCircle(myHero.x, myHero.y, myHero.z, range.AA, 0xCCFFFF)
 					end
 					if menu.draw.mychamp.q then
-						DrawCircle(myHero.x, myHero.y, myHero.z, range.Q, 0xFFFF0000)
+						DrawCircle(myHero.x, myHero.y, myHero.z, range.Q, 0xCCFFFF)
 					end
 					if menu.draw.mychamp.w then
-						DrawCircle(myHero.x, myHero.y, myHero.z, range.W, 0x111111)
+						DrawCircle(myHero.x, myHero.y, myHero.z, range.W, 0xCCFFFF)
 					end
 					if menu.draw.mychamp.e then
-						DrawCircle(myHero.x, myHero.y, myHero.z, range.E, 0xFFFFFFff)
+						DrawCircle(myHero.x, myHero.y, myHero.z, range.E, 0xCCFFFF)
 					end
 					if menu.draw.mychamp.r then
-						DrawCircle(myHero.x, myHero.y, myHero.z, range.R, 0xFFFFFFFF)
+						DrawCircle(myHero.x, myHero.y, myHero.z, range.R, 0xCCFFFF)
 					end
 				end
 			end
@@ -88,19 +99,19 @@ function OnDraw()
 				if GetDistance(target, myHero) < 1500 then
 					if menu.draw[target.charName].draw then
 						if menu.draw[target.charName].aa then
-							DrawCircle(target.x, target.y, target.z, range.AA, 0xFFFFCC)
+							DrawCircle(target.x, target.y, target.z, range.AA, 0xCCFFFF)
 						end
 						if menu.draw[target.charName].q then
-							DrawCircle(target.x, target.y, target.z, range.Q, 0xFFFF0000)
+							DrawCircle(target.x, target.y, target.z, range.Q, 0xCCFFFF)
 						end
 						if menu.draw[target.charName].w then
-							DrawCircle(target.x, target.y, target.z, range.W, 0x111111)
+							DrawCircle(target.x, target.y, target.z, range.W, 0xCCFFFF)
 						end
 						if menu.draw[target.charName].e then
-							DrawCircle(target.x, target.y, target.z, range.E, 0xFFFFFFff)
+							DrawCircle(target.x, target.y, target.z, range.E, 0xCCFFFF)
 						end
 						if menu.draw[target.charName].r then
-							DrawCircle(target.x, target.y, target.z, range.R, 0xFFFFFFFF)
+							DrawCircle(target.x, target.y, target.z, range.R, 0xCCFFFF)
 						end
 					end
 				end
@@ -123,7 +134,7 @@ function LoadMenu()
 		else
 			menu.draw.mychamp:addParam("nys", "not yet surpot", SCRIPT_PARAM_INFO)
 		end
-			
+
 	for _, cp in ipairs(GetEnemyHeroes()) do
 		menu.draw:addSubMenu(cp.charName, cp.charName)
 		if Champ[cp.charName] ~= nil then
@@ -134,7 +145,7 @@ function LoadMenu()
 			menu.draw[cp.charName]:addParam("e", "Draw "..cp.charName.." E?", SCRIPT_PARAM_ONOFF, true)
 			menu.draw[cp.charName]:addParam("r", "Draw "..cp.charName.." R?", SCRIPT_PARAM_ONOFF, true)
 		else
-			
+
 			menu.draw[cp.charName]:addParam("nys",   "not yet surpot", SCRIPT_PARAM_INFO)
 		end
 	end
