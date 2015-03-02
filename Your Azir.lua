@@ -12,7 +12,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 require "SxOrbWalk"
 --A basic BoL template for the Eclipse Lua Development Kit module's execution environment written by Nader Sl.
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Azirlua".."?rand="..math.random(1,10000)
@@ -61,6 +61,7 @@ function OnTick()
 	
 	--kick()
 	Combo()
+	Harass()
 	OnSpellcheck()
 	Escape()
 
