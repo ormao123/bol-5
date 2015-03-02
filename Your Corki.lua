@@ -1,7 +1,5 @@
 if myHero.charName ~= "Corki" then return end
 
-require 'HPrediction'
-
 local ts, SxO
 
 local version = 1.00
@@ -29,6 +27,30 @@ if AUTO_UPDATE then
 		AutoupdaterMsg("Error downloading version info")
 	end
 end
+---------------------------------------------------------------------------------------------------
+
+local SOURCELIB_URL = "https://raw.github.com/TheRealSource/public/master/common/SourceLib.lua"
+local SOURCELIB_PATH = LIB_PATH.."SourceLib.lua"
+
+if FileExist(SOURCELIB_PATH) then
+	require("SourceLib")
+else
+	DOWNLOADING_SOURCELIB = true
+	DownloadFile(SOURCELIB_URL, SOURCELIB_PATH, function() print("Required libraries downloaded successfully, please reload") end)
+end
+
+if DOWNLOADING_SOURCELIB then print("Downloading required libraries, please wait...") return end
+
+local RequireI = Require("SourceLib")
+RequireI:Add("HPrediction", "https://github.com/BolHTTF/BoL/blob/master/HTTF/Common/HPrediction.lua")
+RequireI:Check()
+
+if RequireI.downloadNeeded == true then return end
+
+
+---------------------------------
+
+require 'HPrediction'
 
 function OnLoad()
 
