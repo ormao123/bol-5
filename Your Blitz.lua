@@ -42,7 +42,8 @@ function OnLoad()
 	Spell_Q.range['Blitzcrank'] = 925
 	Spell_Q.speed['Blitzcrank'] = 1800
 	Spell_Q.type['Blitzcrank'] = "DelayLine"
-	Spell_Q.width['Blitzcrank'] = 70
+	Spell_Q.width['Blitzcrank'] = 140
+	
 
   
 	ts = TargetSelector(TARGET_MOST_AD, 1000)
