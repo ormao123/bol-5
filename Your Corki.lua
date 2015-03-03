@@ -4,7 +4,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 
 local ts, SxO
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = false
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Corki.lua".."?rand="..math.random(1,10000)
