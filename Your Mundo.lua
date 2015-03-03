@@ -1,6 +1,8 @@
 --[[
 	Changelog
 	1.02 -- Add Harass Toggle
+	
+	1.04 -- fix
 ]]
 
 
@@ -16,7 +18,7 @@ local SxO, VP = nil, nil
 local QRange, WRange, ERange, RRange = 1000, 320, 225, 0
 local WActive = false
 
-local version = 1.03
+local version = 1.04
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Mundo.lua".."?rand="..math.random(1,10000)
@@ -59,8 +61,6 @@ function OnTick()
 	Farm()
 	Combo()
 	R()
-	
-	if BuffCheck() then WActive = true else WActive = false end
 end
 
 function OnDraw()
@@ -188,8 +188,4 @@ function OnRemoveBuff(unit, buff)
     if unit and unit.isMe and buff.name == "BurningAgony" then 
         WActive = false
     end
-end
-
-function BuffCheck()
-  return TargetHaveBuff("BurningAgony", myHero)
 end
