@@ -5,7 +5,11 @@
 	Add auto Q stun
 	
 	v. 1.03
-	Add Feedhack
+	add Feedback
+	
+	v. 1.04
+	back
+	Fix
 ]]
 
 
@@ -24,7 +28,7 @@ local SxO = nil
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 local Qrance = 900
 
-local version = 1.03
+local version = 1.04
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Zilean.lua".."?rand="..math.random(1,10000)
@@ -87,6 +91,8 @@ function LoadMenu()
 	Config:addSubMenu("ads", "ads")
 		Config.ads:addParam("autow", "Auto W", SCRIPT_PARAM_ONOFF, true)
 		Config.ads:addParam("autoqstun", "Auto Q Stun", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("G"))
+		Config.ads:addParam("runmod", "Run Mod", SCRIPT_PARAM_ONOFF, true)
+		Config.ads:addParam("runmodper", "Until % use runmod", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		
 	Config:addSubMenu("Ult", "ult")
 	for _, ally in ipairs(GetAllyHeroes()) do
@@ -105,6 +111,7 @@ function OnTick()
 	autoR()
 	OnDraw()
 	AutoQstun()
+	RunMod()
 end
 
 function OnDraw()
@@ -117,7 +124,11 @@ function OnCombo()
 	ts:update()
 	if Config.combo.comboactive and ts.target ~= nil then
 		if Eready and Config.combo.usee and slowcheck(ts.tarhet) == false then
-			CastSpell(_E, ts.target)
+			if GetDistance(ts.target, myHero) > 550 then
+				CastSpell(_E, myHero)
+			else
+				CastSpell(_E, ts.target)
+			end
 		end
 		local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 150, Qrance)
 		if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < Qrance and ts.target.dead == false then
@@ -125,7 +136,7 @@ function OnCombo()
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
-		if Wready and not Qready and Config.combo.usew then
+		if Wready and Config.combo.usew and Qready == false then
 			CastSpell(_W)
 		end
 	end
@@ -133,8 +144,8 @@ end
 
 function OnHarass()
 	ts:update()
-	if Config.harass.harassactive then
-		if Config.harass.harassper and ts.target ~= nil then
+	if Config.harass.harassactive  and ts.target ~= nil  then
+		if myHero.mana > (myHero.maxMana*(Config.harass.harassper*0.01)) then
 			if Eready and Config.harass.usee then
 				CastSpell(_E, ts.target)
 			end
@@ -148,11 +159,23 @@ function OnHarass()
 	end
 end
 
+function RunMod()
+	if Config.ads.runmod and myHero.mana > (myHero.maxMana*(Config.ads.runmodper*0.01)) then
+		if CountEnemies(1000, myHero) == 0 then
+			if Eready then
+				CastSpell(_E, myHero)
+			elseif Eready == false and Wready then
+				CastSpell(_W)
+			end
+		end
+	end
+end
+
 function AutoQstun()
 	if Config.ads.autoqstun then
 		ts:update()
 		local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 150, Qrance)
-		if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < Qrance and ts.target ~= nil and ts.target.dead == false then
+		if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < Qrance and ts.target.dead == false then
 			if Qready then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
@@ -221,7 +244,7 @@ function OnSpellcheck()
 		Eready = false
 	end
 	
-	if myHero:CanUseSpell(_Q) == READY then
+	if myHero:CanUseSpell(_R) == READY then
 		Rready = true
 	else
 		Rready = false
