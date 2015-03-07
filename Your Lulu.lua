@@ -96,6 +96,23 @@ function OnTick()
 	end
 	OnKillsteal()
 	OnSpellcheck()
+	if Config.ads.autor and Rready then
+		if player.health < (player.maxHealth*(Config.ads.autorper*0.01)) and countEnemy(player, 200) >= 1 then
+			CastSpell(_R, player)
+		end
+		for _, i in pairs (allyHeroes) do
+			if i.health < (i.maxHealth*(Config.ads.autorper*0.01)) and countEnemy(i, 200) >= 1 then
+				CastSpell(_R, i)
+			end
+		end
+	end
+end
+
+function OnDraw()
+	DrawCircle(player.x, player.y, player.z, Qrance, 0xffff0000)
+	DrawCircle(player.x, player.y, player.z, Wrance, 0xffff0000)
+	DrawCircle(player.x, player.y, player.z, Erance, 0xffff0000)
+	DrawCircle(player.x, player.y, player.z, Rrance, 0xffff0000)
 end
 
 function LoadMenu()
@@ -110,7 +127,7 @@ function LoadMenu()
 			Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 			--Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
 			Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
-			--Config.combo:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
+			Config.combo:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 			
 		Config:addSubMenu("Harass", "harass")
 			Config.harass:addParam("active", "Active", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
@@ -125,6 +142,9 @@ function LoadMenu()
 		Config:addSubMenu("Ads","ads")
 			--Config.ads:addParam("autow", "Auto Shild", SCRIPT_PARAM_ONOFF, false)
 			Config.ads:addParam("interrupt", "interrupt", SCRIPT_PARAM_ONOFF, true)
+			Config.ads:addParam("samrtr", "Use R", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
+			Config.ads:addParam("autor", "Auto R", SCRIPT_PARAM_ONOFF, true)
+			Config.ads:addParam("autorper", "Auto R ally under health %", SCRIPT_PARAM_SLICE, 30, 1, 100, 0)
 end
 
 function OnCombo()
@@ -138,6 +158,9 @@ function OnCombo()
 			if HitChance >= 1 then
 				CastSpell(_Q, Pos.x, Pos.z)
 			end
+		end
+		if Config.combo.user and Rready then
+			SmartR()
 		end
 	end
 end
@@ -175,8 +198,29 @@ function OnLineClear()
 	end
 end
 
-function OnKillsteal()
+function SamrtR()
+	if CountEnemyHeroInRange(Rrance) >= Config.ads.smartr then
+		CastSpell(_R, player)
+	end
+	for _, i in pairs (allyHeroes) do
+		if countEnemy(i, 200) >= Config.ads.smartr then
+			CastSpell(_R, i)
+		end
+	end
+end
+
+function countEnemy(allyHero, range)
 	enemyHeroes:update()
+	local nearEnemy=0
+	for i, e in pairs(enemyHeroes) do
+		if GetDistance(allyHero, enemyHeroes) < range then
+			nearEnemy = nearEnemy + 1
+		end
+	end
+	return nearEnemy
+end
+
+function OnKillsteal()
 end
 
 function SmartW(target)
