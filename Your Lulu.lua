@@ -1,6 +1,6 @@
 if myHero.charName ~= "Lulu" then return end
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Lulu.lua".."?rand="..math.random(1,10000)
@@ -160,7 +160,7 @@ function OnCombo()
 			end
 		end
 		if Config.combo.user and Rready then
-			SmartR()
+			SamrtR()
 		end
 	end
 end
@@ -189,11 +189,13 @@ function OnHarass()
 end
 
 function OnLineClear()
-	enemyMinions:update()
+	enemyMinions:update().
 	for i, minion in pairs(enemyMinions.objects) do
-		local Pos, HitChance = HPred:GetPredict("Q", minion, player)
-		if HitChance >= 1 then
-			CastSpell(_Q, Pos.x, Pos.z)
+		if Config.lc.useq then
+			local Pos, HitChance = HPred:GetPredict("Q", minion, player)
+			if HitChance >= 1 then
+				CastSpell(_Q, Pos.x, Pos.z)
+			end
 		end
 	end
 end
@@ -210,7 +212,6 @@ function SamrtR()
 end
 
 function countEnemy(allyHero, range)
-	enemyHeroes:update()
 	local nearEnemy=0
 	for i, e in pairs(enemyHeroes) do
 		if GetDistance(allyHero, enemyHeroes) < range then
