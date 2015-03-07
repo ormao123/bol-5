@@ -116,7 +116,7 @@ function LoadMenu()
 			Config.harass:addParam("active", "Active", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
 			Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 			Config.harass:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
-			Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
+			--Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 			
 		Config:addSubMenu("Line Clear", "lc")
 			Config.lc:addParam("active", "Active", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
@@ -130,6 +130,9 @@ end
 function OnCombo()
 	local Target = STS:GetTarget(Qrance)
 	if Target ~= nil then
+		if Config.combo.usee and Eready then
+			CastSpell(_E, Target)
+		end
 		if Config.combo.useq and GetDistance(Target, player) < Qrance then
 			local Pos, HitChance = HPred:GetPredict("Q", Target, player)
 			if HitChance >= 1 then
@@ -143,7 +146,7 @@ function OnHarass()
 	local Target = STS:GetTarget(Qrance+Erance)
 	if Target ~= nil then
 		if GetDistance(Target, player) < Qrance then
-			if Config.harass.usee and Eready then
+			if Config.harass.usew and Eready then
 				CastSpell(_W, Target)
 			end
 				if Config.harass.useq and Qrance then
