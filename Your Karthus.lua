@@ -22,7 +22,7 @@ require "VPrediction"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.07
+local version = 1.08
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -52,6 +52,7 @@ function OnLoad()
 
 	VP = VPrediction()
 	SxO = SxOrbWalk()
+	SxO:DisableAttacks()
 	
 	LoadMenu()
 	
