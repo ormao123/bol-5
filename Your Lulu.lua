@@ -1,6 +1,6 @@
 if myHero.charName ~= "Lulu" then return end
 
-local version = 1.02
+local version = 1.03
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Lulu.lua".."?rand="..math.random(1,10000)
@@ -26,7 +26,7 @@ if AUTO_UPDATE then
 	end
 end
 
-require 'HPrediction'
+require 'VPrediction'
 require 'SxOrbWalk'
 require 'sourceLib'
 
@@ -61,18 +61,10 @@ local ToInterrupt = {}
 
 function OnLoad()
 	
-	HPred	= HPrediction()
+	VP		= VPrediction()
 	STS		= SimpleTS()
 	SxO		= SxOrbWalk()
 	
-	
-	Spell_Q.collisionM['Lulu'] = false
-	Spell_Q.collisionH['Lulu'] = false
-	Spell_Q.delay['Lulu'] = .25
-	Spell_Q.range['Lulu'] = 950
-	Spell_Q.speed['Lulu'] = 1600
-	Spell_Q.type['Lulu'] = "PromptLine"
-	Spell_Q.width['Lulu'] = 60
 	
 	LoadMenu()
 	
@@ -154,9 +146,9 @@ function OnCombo()
 			CastSpell(_E, Target)
 		end
 		if Config.combo.useq and GetDistance(Target, player) < Qrance then
-			local Pos, HitChance = HPred:GetPredict("Q", Target, player)
-			if HitChance >= 1 then
-				CastSpell(_Q, Pos.x, Pos.z)
+			local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, 0.25,60,950, 1600, myHero, false)
+			if CastPosition and HitChance >= 2 then
+				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
 		if Config.combo.user and Rready then
@@ -172,29 +164,30 @@ function OnHarass()
 			if Config.harass.usew and Eready then
 				CastSpell(_W, Target)
 			end
-				if Config.harass.useq and Qrance then
-				local Pos, HitChance = HPred:GetPredict("Q", Target, player)
-				if HitChance >= 1 then
-					CastSpell(_Q, Pos.x, Pos.z)
+			if Config.harass.useq and Qrance then
+				local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, 0.25,60,950, 1600, myHero, false)
+				if CastPosition and HitChance >= 2 then
+					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
 			end
 		elseif GetDistance(Target, player) < Qrance+Erance then
 			SmartW(Target)
-			local Pos, HitChance = HPred:GetPredict("Q", Target, player)
-			if HitChance >= 1 then
-				CastSpell(_Q, Pos.x, Pos.z)
+			local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, 0.25,60,950, 1600, myHero, false)
+			if CastPosition and HitChance >= 2 then
+				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
 	end
 end
 
 function OnLineClear()
-	enemyMinions:update().
-	for i, minion in pairs(enemyMinions.objects) do
+	enemyMinions:update()
+	local minion
+	for _, minion in pairs(enemyMinions.objects) do
 		if Config.lc.useq then
-			local Pos, HitChance = HPred:GetPredict("Q", minion, player)
-			if HitChance >= 1 then
-				CastSpell(_Q, Pos.x, Pos.z)
+			local CastPosition, HitChance, Position = VP:GetLineCastPosition(minion, 0.25,60,950, 1600, myHero, false)
+			if CastPosition and HitChance >= 2 then
+				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
 	end
