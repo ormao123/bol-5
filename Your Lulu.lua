@@ -2,7 +2,7 @@ if myHero.charName ~= "Lulu" then return end
 
 assert(load(Base64Decode("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"), nil, "bt", _ENV))() ScriptStatus("VILJMOOPHPH") 
 
-local version = 1.03
+local version = 1.04
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Lulu.lua".."?rand="..math.random(1,10000)
@@ -103,10 +103,10 @@ function OnTick()
 end
 
 function OnDraw()
-	DrawCircle(player.x, player.y, player.z, Qrance, 0xffff0000)
-	DrawCircle(player.x, player.y, player.z, Wrance, 0xffff0000)
-	DrawCircle(player.x, player.y, player.z, Erance, 0xffff0000)
-	DrawCircle(player.x, player.y, player.z, Rrance, 0xffff0000)
+	if Config.draw.drawq then DrawCircle(player.x, player.y, player.z, Qrance, 0xffff0000) end
+	if Config.draw.draww then DrawCircle(player.x, player.y, player.z, Wrance, 0xffff0000) end
+	if Config.draw.drawe then DrawCircle(player.x, player.y, player.z, Erance, 0xffff0000) end
+	if Config.draw.drawr then DrawCircle(player.x, player.y, player.z, Rrance, 0xffff0000) end
 end
 
 function LoadMenu()
@@ -136,9 +136,15 @@ function LoadMenu()
 		Config:addSubMenu("Ads","ads")
 			--Config.ads:addParam("autow", "Auto Shild", SCRIPT_PARAM_ONOFF, false)
 			Config.ads:addParam("interrupt", "interrupt", SCRIPT_PARAM_ONOFF, true)
-			Config.ads:addParam("samrtr", "Use R", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
+			Config.ads:addParam("smartr", "Use R", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 			Config.ads:addParam("autor", "Auto R", SCRIPT_PARAM_ONOFF, true)
 			Config.ads:addParam("autorper", "Auto R ally under health %", SCRIPT_PARAM_SLICE, 30, 1, 100, 0)
+			
+		Config:addSubMenu("Draw", "draw")
+			Config.draw:addParam("drawq", "DrawQ", SCRIPT_PARAM_ONOFF, true)
+			Config.draw:addParam("draww", "DrawW", SCRIPT_PARAM_ONOFF, true)
+			Config.draw:addParam("drawe", "DrawE", SCRIPT_PARAM_ONOFF, true)
+			Config.draw:addParam("drawr", "DrawR", SCRIPT_PARAM_ONOFF, true)
 end
 
 function OnCombo()
@@ -176,7 +182,7 @@ function OnHarass()
 			SmartW(Target)
 			local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, 0.25,60,950, 1600, myHero, false)
 			if CastPosition and HitChance >= 2 then
-				CastSpell(_Q, CastPosition.x, CastPosition.z)
+				DelayAction(function() CastSpell(_Q, CastPosition.x, CastPosition.z) end, 0.5)
 			end
 		end
 	end
@@ -196,20 +202,22 @@ function OnLineClear()
 end
 
 function SamrtR()
-	if CountEnemyHeroInRange(Rrance) >= Config.ads.smartr then
-		CastSpell(_R, player)
-	end
-	for _, i in pairs (allyHeroes) do
-		if countEnemy(i, 200) >= Config.ads.smartr then
-			CastSpell(_R, i)
+	if Rready then
+		if countEnemy(player, 200) >= Config.ads.smartr then
+			CastSpell(_R, player)
+		end
+		for _, i in pairs (allyHeroes) do
+			if countEnemy(i, 200) >= Config.ads.smartr and GetDistance(i, player) < Rrance then
+				CastSpell(_R, i)
+			end
 		end
 	end
 end
 
 function countEnemy(allyHero, range)
-	local nearEnemy=0
+	local nearEnemy = 0
 	for i, e in pairs(enemyHeroes) do
-		if GetDistance(allyHero, enemyHeroes) < range then
+		if GetDistance(allyHero, e) < range then
 			nearEnemy = nearEnemy + 1
 		end
 	end
@@ -222,7 +230,7 @@ end
 function SmartW(target)
 	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
-		if GetDistance(minion, player) < Erance and GetDistance(minion, target) < Qrance and getDmg("E", minion, player) < minion.health then
+		if GetDistance(minion, player) < Erance and GetDistance(minion, target) < Qrance and getDmg("E", minion, player) < minion.health and minion ~= nil then
 			CastSpell(_E, minion)
 		end
 	end
