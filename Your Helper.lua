@@ -22,7 +22,7 @@ local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Helper:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 if AUTO_UPDATE then
-	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/Your Helper.version")
+	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/version/Your Helper.version")
 	if ServerData then
 		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
 		if ServerVersion then
@@ -60,6 +60,9 @@ end
  
  local TRINKET_RANGE = 600
  
+ -- posion
+ local mana_potion_time, health_potion_time, flask_potion_time =0, 0, 0
+ 
  -- Ward
  
  local Ward = {}
@@ -94,6 +97,9 @@ function LoadItem()
 		[3140]				= "QuicksilverSash",
 		[2044]				= "SightWard",
 		[2043]				= "VisionWard",
+		[2003]				= "RegenerationPotion",
+		[2004]				= "FlaskOfCrystalWater",
+		[2041]				= "ItemCrystalFlask",
 	}
 	
 	_G.ITEM_1				= 06
@@ -184,6 +190,7 @@ end
 
 function OnTick()
 	DmgCalc()
+	Drink()
 end
 
 function OnDraw()
@@ -219,11 +226,16 @@ function LoadMenu()
 		menu.whg:addParam("active", "Active", SCRIPT_PARAM_ONOFF, true)
 		
 	menu:addSubMenu("Can he kill me", "chkm")
-		menu.chkm:addParam("active", "active", SCRIPT_PARAM_ONOFF, true)
+		menu.chkm:addParam("active", "Active", SCRIPT_PARAM_ONOFF, true)
 		local i, Champion
 		for i, Champion in pairs(enemyHeroes) do
 			menu.chkm:addParam(Champion.charName,"Draw for: " .. Champion.charName .. "?", SCRIPT_PARAM_LIST, 1, {"YES", "NO"})
 		end
+		
+	menu:addSubMenu("Auto Posion", "posion")
+		menu.posion:addParam("active", "Active", SCRIPT_PARAM_ONOFF, true)
+		menu.posion:addParam("health", "Use Health posion under %", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
+		menu.posion:addParam("mana", "Use Mana posion under %", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
 end
 
  -- enemy Vision
@@ -457,4 +469,23 @@ function chkmOnDraw()
 			end
         end
     end
+end
+
+-- Auto Posion
+
+function Drink()
+	if menu.posion.active then
+		if GetInventoryItemIsCastable(2041) and player.health <= player.maxHealth*menu.posion.health*0.01 and player.mana <= player.maxMana*menu.posion.mana*0.01 and flask_potion_time+12 < os.clock() then
+			CastItem(2041)
+			flask_potion_time = os.clock()
+		end
+		if GetInventoryItemIsCastable(2003) and myHero.health/myHero.maxHealth*100 <=menu.posion.health and health_potion_time+15 < os.clock() then
+			CastItem(2003)
+			health_potion_time = os.clock()
+		end
+		if GetInventoryItemIsCastable(2004) and myHero.mana/myHero.maxMana*100 <=menu.posion.mana and mana_potion_time+15 < os.clock() then
+			CastItem(2004)
+			mana_potion_time = os.clock()
+		end
+	end
 end
