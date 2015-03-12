@@ -4,16 +4,17 @@ Your Helper
 -enemy vision Done
 -enemy Spell Cooldown
 -enemy Anti closurer Done
--Auto Potion
+-enemy Cool Down Done
+-enemy skill Range
+-Auto Potion Done
 -Auto QSS
 -Enemy position Done
 -Ward Position
--Auto Item
 -Auto Summoner Spell
 
 ]]
 
-local version = 1.00
+local version = 1.01
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Helper.lua".."?rand="..math.random(1,10000)
@@ -44,7 +45,7 @@ end
  
  -- local
  
- local clean, smite = nil, nil
+ local clean, smite, flash, ignite, boost = nil, nil, nil, nil
  
  -- Vision
  local defaultColor = {100, 255, 0, 0}
@@ -136,6 +137,7 @@ end
 -- Get Summoner Spell
 
 function GetSS()
+
 	--QS
 	if myHero:GetSpellData(SUMMONER_1).name:find("summonerboost") then
 		clean = SUMMONER_1
@@ -197,6 +199,8 @@ function OnDraw()
 	VisionDraw()
 	EnemyPath()
 	chkmOnDraw()
+	CooldownCheck()
+	enemyskillrange()
 end
 
 function LoadMenu()
@@ -236,6 +240,16 @@ function LoadMenu()
 		menu.posion:addParam("active", "Active", SCRIPT_PARAM_ONOFF, true)
 		menu.posion:addParam("health", "Use Health posion under %", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
 		menu.posion:addParam("mana", "Use Mana posion under %", SCRIPT_PARAM_SLICE, 30, 0, 100, 0)
+		
+	menu:addSubMenu("Cooldown check", "cc")
+		menu.cc:addParam("active", "Active", SCRIPT_PARAM_ONOFF, true)
+		
+	menu:addSubMenu("Enemy Skill Range", "esr")
+		menu.esr:addParam("active", "Active", SCRIPT_PARAM_ONOFF, true)
+		menu.esr:addParam("qcolor", "Q Color", SCRIPT_PARAM_COLOR, defaultColor)
+		menu.esr:addParam("wcolor", "W Color", SCRIPT_PARAM_COLOR, defaultColor)
+		menu.esr:addParam("ecolor", "E Color", SCRIPT_PARAM_COLOR, defaultColor)
+		menu.esr:addParam("rcolor", "R Color", SCRIPT_PARAM_COLOR, defaultColor)
 end
 
  -- enemy Vision
@@ -474,7 +488,7 @@ end
 -- Auto Posion
 
 function Drink()
-	if menu.posion.active then
+	if menu.posion.active and not player.dead then
 		if GetInventoryItemIsCastable(2041) and player.health <= player.maxHealth*menu.posion.health*0.01 and player.mana <= player.maxMana*menu.posion.mana*0.01 and flask_potion_time+12 < os.clock() then
 			CastItem(2041)
 			flask_potion_time = os.clock()
@@ -489,3 +503,68 @@ function Drink()
 		end
 	end
 end
+
+ -- Cool Down check
+ 
+ 
+function CooldownCheck()
+	local s, x, y = 18, 100, 100
+	if menu.cc.active then
+		for j, i in pairs(enemyHeroes) do
+			DrawText(i.charName,s, 50, j*y+s*1, 0xffffffff)
+			if i:GetSpellData(_Q).currentCd ==0 then
+				DrawText("[Q]",s, x, j*y+s*2, 0xFFFFFF00)
+			else
+				DrawText("[Q]",s, x, j*y+s*2, 0xFFFF0000)
+				DrawText(tostring(math.ceil(i:GetSpellData(_Q).currentCd)),s, x-s*2, j*y+s*2, 0xFFFF0000)
+			end
+			if i:GetSpellData(_W).currentCd ==0 then
+				DrawText("[W]",s, x, j*y+s*3, 0xFFFFFF00)
+			else
+				DrawText("[W]",s, x, j*y+s*3, 0xFFFF0000)
+				DrawText(tostring(math.ceil(i:GetSpellData(_W).currentCd)),s, x-s*2, j*y+s*3, 0xFFFF0000)
+			end
+			if i:GetSpellData(_E).currentCd ==0 then
+				DrawText("[E]",s, x, j*y+s*4, 0xFFFFFF00)
+			else
+				DrawText("[E]",s, x, j*y+s*4, 0xFFFF0000)
+				DrawText(tostring(math.ceil(i:GetSpellData(_E).currentCd)),s, x-s*2, j*y+s*4, 0xFFFF0000)
+			end
+			if i:GetSpellData(_R).currentCd ==0 then
+				DrawText("[R]",s, x, j*y+s*5, 0xFFFFFF00)
+			else
+				DrawText("[R]",s, x, j*y+s*5, 0xFFFF0000)
+				DrawText(tostring(math.ceil(i:GetSpellData(_R).currentCd)),s, x-s*2, j*y+s*5, 0xFFFF0000)
+			end
+			local sm1, sm2 = i:GetSpellData(SUMMONER_1).name, i:GetSpellData(SUMMONER_2).name
+			if i:GetSpellData(SUMMONER_1).currentCd ==0 then
+				DrawText("["..sm1.."]",s, x, j*y+s*6, 0xFFFFFF00)
+			else
+				DrawText("["..sm1.."]",s, x, j*y+s*6, 0xFFFF0000)
+				DrawText(tostring(math.ceil(i:GetSpellData(_SUMMONER_1).currentCd)),s, x-s*2, j*y+s*6, 0xFFFF0000)
+			end
+			if i:GetSpellData(SUMMONER_1).currentCd ==0 then
+				DrawText("["..sm2.."]",s, x, j*y+s*7, 0xFFFFFF00)
+			else
+				DrawText("["..sm2.."]",s, x, j*y+s*7, 0xFFFF0000)
+				DrawText(tostring(math.ceil(i:GetSpellData(_SUMMONER_2).currentCd)),s, x-s*2, j*y+s*7, 0xFFFF0000)
+			end
+		end
+	end
+end
+
+
+ -- Enemy Skill Range
+ 
+ function enemyskillrange()
+	if menu.esr.active then
+		for i, j in pairs(enemyHeroes) do
+			if not j.dead then
+				DrawCircle(j.x, j.y, j.z, j:GetSpellData(_Q).range, TARGB(menu.esr.qcolor))
+				DrawCircle(j.x, j.y, j.z, j:GetSpellData(_W).range, TARGB(menu.esr.wcolor))
+				DrawCircle(j.x, j.y, j.z, j:GetSpellData(_E).range, TARGB(menu.esr.ecolor))
+				DrawCircle(j.x, j.y, j.z, j:GetSpellData(_R).range, TARGB(menu.esr.rcolor))
+			end
+		end
+	end
+ end
