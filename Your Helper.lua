@@ -14,7 +14,7 @@ Your Helper
 
 ]]
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Helper.lua".."?rand="..math.random(1,10000)
@@ -512,25 +512,25 @@ function CooldownCheck()
 	if menu.cc.active then
 		for j, i in pairs(enemyHeroes) do
 			DrawText(i.charName,s, 50, j*y+s*1, 0xffffffff)
-			if i:GetSpellData(_Q).currentCd ==0 then
+			if i:GetSpellData(_Q).currentCd ==0 and i:GetSpellData(_Q).level >0 then
 				DrawText("[Q]",s, x, j*y+s*2, 0xFFFFFF00)
 			else
 				DrawText("[Q]",s, x, j*y+s*2, 0xFFFF0000)
 				DrawText(tostring(math.ceil(i:GetSpellData(_Q).currentCd)),s, x-s*2, j*y+s*2, 0xFFFF0000)
 			end
-			if i:GetSpellData(_W).currentCd ==0 then
+			if i:GetSpellData(_W).currentCd ==0 and i:GetSpellData(_W).level >0 then
 				DrawText("[W]",s, x, j*y+s*3, 0xFFFFFF00)
 			else
 				DrawText("[W]",s, x, j*y+s*3, 0xFFFF0000)
 				DrawText(tostring(math.ceil(i:GetSpellData(_W).currentCd)),s, x-s*2, j*y+s*3, 0xFFFF0000)
 			end
-			if i:GetSpellData(_E).currentCd ==0 then
+			if i:GetSpellData(_E).currentCd ==0 and i:GetSpellData(_E).level >0 then
 				DrawText("[E]",s, x, j*y+s*4, 0xFFFFFF00)
 			else
 				DrawText("[E]",s, x, j*y+s*4, 0xFFFF0000)
 				DrawText(tostring(math.ceil(i:GetSpellData(_E).currentCd)),s, x-s*2, j*y+s*4, 0xFFFF0000)
 			end
-			if i:GetSpellData(_R).currentCd ==0 then
+			if i:GetSpellData(_R).currentCd ==0 and i:GetSpellData(_R).level >0 then
 				DrawText("[R]",s, x, j*y+s*5, 0xFFFFFF00)
 			else
 				DrawText("[R]",s, x, j*y+s*5, 0xFFFF0000)
@@ -559,7 +559,7 @@ end
  function enemyskillrange()
 	if menu.esr.active then
 		for i, j in pairs(enemyHeroes) do
-			if not j.dead then
+			if not j.dead and j.visible then
 				DrawCircle(j.x, j.y, j.z, j:GetSpellData(_Q).range, TARGB(menu.esr.qcolor))
 				DrawCircle(j.x, j.y, j.z, j:GetSpellData(_W).range, TARGB(menu.esr.wcolor))
 				DrawCircle(j.x, j.y, j.z, j:GetSpellData(_E).range, TARGB(menu.esr.ecolor))
