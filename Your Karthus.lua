@@ -22,7 +22,7 @@ require "VPrediction"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.08
+local version = 1.09
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -109,6 +109,15 @@ function OnTick()
 	OnHarass()
 	OnSpellcheck()
 	Farm()
+	
+	for i = 1, myHero.buffCount do
+		local buff = myHero:getBuff(i)
+		if buff.name == "KarthusDefile" then
+			EActive = true
+		else
+			EActive = false
+		end
+	end
 end
 
 function OnCombo()
@@ -130,13 +139,11 @@ function OnCombo()
 					end
 				end
 				
-				if CountEnemyHeroInRange(eRange) >= 1 and EActive() == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
+				if CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana >= (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
 					CastSpell(_E)
 				end
 				
-				if CountEnemyHeroInRange(eRange) == 0 and EActive() and Eready then
-					CastSpell(_E)
-				elseif myHero.mana < (myHero.maxMana*(ConfigY.combo.pere*0.01)) and EActive() and Eready then
+				if CountEnemyHeroInRange(eRange) == 0 and EActive == true and Eready then
 					CastSpell(_E)
 				end
 			end
@@ -152,7 +159,7 @@ function OnHarass()
 				if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
-				if ConfigY.harass.usee and CountEnemyHeroInRange(eRange) >= 1 and EActive() == false and Eready and myHero.mana > (myHero.maxMana*(ConfigY.harass.pere*0.01)) then
+				if ConfigY.harass.usee and CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana >= (myHero.maxMana*(ConfigY.harass.pere*0.01)) then
 					CastSpell(_E)
 				end
 				
@@ -254,7 +261,7 @@ function OnRemoveBuff(unit, buff)
 end
 
 function EActive()
-  return TargetHaveBuff("lucianpassivebuff", myHero)
+  return TargetHaveBuff("KarthusDefile", myHero)
 end
 
 function recall()
