@@ -1,5 +1,5 @@
 
-local version = 1.00
+local version = 1.01
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your ADC Series.lua".."?rand="..math.random(1,10000)
@@ -37,7 +37,7 @@ local champions = {
 	--["Jinx"]		= true,
 	--["Kalista"]		= true,
 	--["Caitlyn"]		= true,
-	--["KogMaw"]		= true,
+	["KogMaw"]		= true,
 	["Corki"]		= true,
 	--["Tristana"]	= true,
 	--["Twitch"]		= true,
@@ -65,6 +65,9 @@ local EnemyMinions = minionManager(MINION_ENEMY, 1500, player, MINION_SORT_MAXHE
 local JungleMinions = minionManager(MINION_JUNGLE, 1500, player, MINION_SORT_MAXHEALTH_DEC)
 local champLoaded = false
 local MMALoad, RebornLoad, SxOLoad, RevampedLoaded = false, false, false, false
+
+local MyminBBox = GetDistance(myHero.minBBox)/2
+local AARange = myHero.range+MyminBBox 
 
 
 local cansleingspell = {
@@ -566,6 +569,12 @@ end
 				CastSpell(_Q, bestpos.x, bestpos.z)
 			end
 		end
+		if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
+			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
+			if HitChance >= 2 then
+				CastSpell(_R, CastPosition.x, CastPosition.z)
+			end
+		end
 	end
 	EnemyMinions:update()
 	for i, minion in pairs(EnemyMinions.objects) do
@@ -573,6 +582,12 @@ end
 			local bestpos, besthit = GetBestLineFarmPosition(825, 450, EnemyMinions.objects)
 			if bestpos ~= nil then
 				CastSpell(_Q, bestpos.x, bestpos.z)
+			end
+		end
+		if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
+			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
+			if HitChance >= 2 then
+				CastSpell(_R, CastPosition.x, CastPosition.z)
 			end
 		end
 	end
@@ -598,7 +613,8 @@ end
 		Config.harass:addParam("perr", "Until % R", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		
 		Config.lc:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
-		Config.lc:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		Config.lc:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
+		Config.lc:addParam("perq", "Until % ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 	
 		Config.draw:addParam("drawq", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawqcolor", "Draw Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
@@ -695,12 +711,12 @@ function Urgot:LineClear()
 	end
 end
 
-function Ezreal:OnFarm()
+function Urgot:OnFarm()
 	EnemyMinions:update()
 	for i, minion in ipairs(EnemyMinions.objects) do
 		if ValidTarget(minion) and GetDistance(minion) <= 1200 and Qready and getDmg("Q", minion, player) > minion.health and Config.fm.useq then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.5, 75, 1200, 1500, player, true)
-			if HitChance >= 2 and GetDistance(CastPosition) < 1200 then
+			if HitChance >= 2 and GetDistance(CastPosition) < 1200 and player.mana > (player.maxMana*(Config.fm.perq*0.01)) then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
@@ -734,6 +750,7 @@ end
 		Config.lc:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		
 		Config.fm:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
+		Config.fm:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
  end
  
 --[[function jinx:__init()
@@ -843,7 +860,7 @@ function Ezreal:OnTick()
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
-		if ValidTarget(t) and Config.ks.useq and GetDistance(t, player) < Config.ks.perr and getDmg("R", t, player) > t.health and GetDistance(t, player) > 100 then
+		if ValidTarget(t) and Config.ks.useq and GetDistance(t, player) <= Config.ks.maxr and getDmg("R", t, player) > t.health and GetDistance(t, player) >= Config.ks.minr then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(t, 0.98, 120, Config.ks.perr, 2000, player, true)
 			if HitChance >= 2 then
 				CastSpell(_R, CastPosition.x, CastPosition.z)
@@ -882,10 +899,141 @@ function Ezreal:ApplyMenu()
 	Config:addSubMenu("KillSteal", "ks")
 		Config.ks:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
-		Config.ks:addParam("perr", "Until % Harass", SCRIPT_PARAM_SLICE, 1000, 1000, 5000, 0)
+		Config.ks:addParam("maxr", "Max Range", SCRIPT_PARAM_SLICE, 1000, 1000, 5000, 0)
+		Config.ks:addParam("minr", "Min Range", SCRIPT_PARAM_SLICE, 500, 100, 1000, 0)
 		
 		Config.fm:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 end
+ 
+function KogMaw:__init()
+end
+
+function KogMaw:OnCombo()
+	local Target = OrbTarget(1600)
+	if Target ~= nil then
+		if Config.combo.useq and GetDistance(Target) < 975 and Qready then
+			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.5, 70, 975, 1200, player, true)
+			if HitChance >= 2 and GetDistance(CastPosition) < 975 then
+				CastSpell(_Q, CastPosition.x, CastPosition.z)
+			end
+		end
+		if Config.combo.usew and Wready and GetDistance(Target) <= 1000 then
+			CastSpell(_W)
+		end
+		if Config.combo.usee and GetDistance(Target) < 1200 and Eready then
+			local CastPos, HitChance, NTargets = VP:GetLineAOECastPosition(Target, 0.5, 120, 1200, 1200, player)
+			if HitChance >= 2 then
+				CastSpell(_E, CastPos.x, CastPos.z)
+			end
+		end
+		local Rrance = champ.GetRrance()
+		if Config.combo.user and GetDistance(Target) < Rrance and Rrance then
+			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(Target, 1.1, 225, Rrance, math.huge, player)
+			if TargetHitChance >= 2 then
+				CastSpell(_R, CastPosition.x, CastPosition.z)
+			end
+		end
+	end
+end
+
+function KogMaw:OnHarass()
+	local Target = OrbTarget(1600)
+	local Rrance = champ.GetRrance()
+	if Target ~= nil then
+		if player.mana > (player.maxMana*(Config.harass.perq*0.01)) then
+			if Config.harass.usee and GetDistance(Target) < 1200 and Eready then
+				local CastPos, HitChance, NTargets = VP:GetLineAOECastPosition(Target, 0.5, 120, 1200, 1200, player)
+				if HitChance >= 2 then
+					CastSpell(_E, CastPos.x, CastPos.z)
+				end
+			end
+			if Config.harass.user and GetDistance(Target) < Rrance and Rrance then
+				local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(Target, 1.1, 225, Rrance, math.huge, player)
+				if TargetHitChance >= 2 then
+					CastSpell(_R, CastPosition.x, CastPosition.z)
+				end
+			end
+		end
+	end
+end
+
+function KogMaw:OnTick()
+	local i, t
+	local Rrance = champ.GetRrance()
+	for i, t in pairs(enemyHeroes) do
+		if ValidTarget(t) and Config.ks.user and getDmg("R", t, player) > t.health and GetDistance(t, player) > 100 then
+			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(t, 1.1, 225, Rrance, math.huge, player)
+			if TargetHitChance >= 2 then
+				CastSpell(_R, CastPosition.x, CastPosition.z)
+			end
+		end
+	end
+end
+
+function KogMaw:OnDraw()
+	if Config.draw.drawq then DrawCircle(player.x, player.y, player.z, 975, TARGB(Config.draw.drawqcolor)) end
+	if Config.draw.drawe then DrawCircle(player.x, player.y, player.z, 1200, TARGB(Config.draw.drawecolor)) end
+	if Config.draw.drawr then DrawCircle(player.x, player.y, player.z, champ.GetRrance(), TARGB(Config.draw.drawrcolor)) end
+end
+
+function KogMaw:GetRrance()
+	local Rrance = 0
+	if player:GetSpellData(_R).level == 1 then Rrance = 1100
+	elseif player:GetSpellData(_R).level == 2 then Rrance = 1375
+	elseif player:GetSpellData(_R).level == 3 then Rrance = 1650
+	end
+	return Rrance
+end
+
+function KogMaw:LineClear()
+	if Config.lc.active and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
+		local Rrance = champ.GetRrance()
+		JungleMinions:update()
+		for i, minion in ipairs(JungleMinions.objects) do
+			if ValidTarget(minion) and GetDistance(minion) <= Rrance and Rready and Config.lc.user then
+				local bestpos, besthit = GetBestLineFarmPosition(Rrance, 225, JungleMinions.objects)
+				if bestpos ~= nil then
+					CastSpell(_R, bestpos.x, bestpos.z)
+				end
+			end
+		end
+		EnemyMinions:update()
+		for i, minion in ipairs(EnemyMinions.objects) do
+			if ValidTarget(minion) and GetDistance(minion) <= Rrance and Rready and Config.lc.user then
+				local bestpos, besthit = GetBestLineFarmPosition(Rrance, 225, EnemyMinions.objects)
+				if bestpos ~= nil then
+					CastSpell(_R, bestpos.x, bestpos.z)
+				end
+			end
+		end
+	end
+end
+
+function KogMaw:ApplyMenu()
+		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
+		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
+		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
+		Config.combo:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
+		
+		Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
+		Config.harass:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
+		Config.harass:addParam("perq", "Until % Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		
+		Config.draw:addParam("drawq", "Draw Q", SCRIPT_PARAM_ONOFF, true)
+		Config.draw:addParam("drawqcolor", "Draw Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
+		Config.draw:addParam("drawe", "Draw E", SCRIPT_PARAM_ONOFF, true)
+		Config.draw:addParam("drawecolor", "Draw E Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
+		Config.draw:addParam("drawr", "Draw R", SCRIPT_PARAM_ONOFF, true)
+		Config.draw:addParam("drawrcolor", "Draw R Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
+		
+		Config.lc:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
+		Config.lc:addParam("perq", "Until % R", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		
+	Config:addSubMenu("KillSteal", "ks")
+		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
+		
+end
+ 
  
 --[[function Karthus:__init()
 end
