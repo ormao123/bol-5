@@ -1,5 +1,20 @@
 
-local version = 1.01
+ --[[
+  Update Note
+  v 1.02
+   Add Tristana
+   Add Anti Gapcloser
+   Add Anti Spell
+ 
+  v 1.01
+   Add Kog'Maw
+ 
+ ]]
+
+
+
+
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your ADC Series.lua".."?rand="..math.random(1,10000)
@@ -39,7 +54,7 @@ local champions = {
 	--["Caitlyn"]		= true,
 	["KogMaw"]		= true,
 	["Corki"]		= true,
-	--["Tristana"]	= true,
+	["Tristana"]	= true,
 	--["Twitch"]		= true,
 }
 
@@ -71,12 +86,40 @@ local AARange = myHero.range+MyminBBox
 
 
 local cansleingspell = {
-	["Thresh"] = {"ThreshE"}
+	["Tristana"] = { spell = _R, spellRange = "645"},
 }
 
 
 local gapcloserspell = {
-	["Thresh"] = {"threshqleap", "ThreshE"}
+	--        ['Ahri']        = {true, spell = _R,},
+        ['Aatrox']      = {true, spell = _Q,},
+        ['Akali']       = {true, spell = _R,}, -- Targeted ability
+        ['Alistar']     = {true, spell = _W,}, -- Targeted ability
+        ['Diana']       = {true, spell = _R,}, -- Targeted ability
+        ['Gragas']      = {true, spell = _E,},
+        ['Graves']      = {true, spell = _E,},
+        --['Hecarim']     = {true, spell = _R,},
+        ['Irelia']      = {true, spell = _Q,}, -- Targeted ability
+        --['JarvanIV']    = {true, spell = 'jarvanAddition',}, -- Skillshot/Targeted ability
+        ['Jax']         = {true, spell = _Q,}, -- Targeted ability
+        --['Jayce']       = {true, spell = 'JayceToTheSkies',}, -- Targeted ability
+        ['Khazix']      = {true, spell = _E,},
+        ['Leblanc']     = {true, spell = _W,},
+        --['LeeSin']      = {true, spell = 'blindmonkqtwo',},
+        ['Leona']       = {true, spell = _E,},
+        --['Malphite']    = {true, spell = _R,},
+        ['Maokai']      = {true, spell = _W,}, -- Targeted ability
+        ['MonkeyKing']  = {true, spell = _E,}, -- Targeted ability
+        ['Pantheon']    = {true, spell = _W,}, -- Targeted ability
+        ['Poppy']       = {true, spell = _E,}, -- Targeted ability
+        --['Quinn']       = {true, spell = _E,}, -- Targeted ability
+        ['Renekton']    = {true, spell = _E,},
+        ['Sejuani']     = {true, spell = _Q,},
+        ['Shen']        = {true, spell = _E,},
+        ['Tristana']    = {true, spell = _W,},
+		['Thresh']		= {true, spell = _Q},
+        --['Tryndamere']  = {true, spell = 'Slash',,
+        ['XinZhao']     = {true, spell = _E,}, -- Targeted ability
 }
 
 local InterruptList = {
@@ -101,6 +144,7 @@ local ToInterrupt = {}
 
 function OnLoad()
 	champ = champ()
+	self = champ
 	
 	if not champ then AutoupdaterMsg("There was an error while loading " .. player.charName .. ", please report the shown error to Yours, thanks!") return else champLoaded = true end
 	
@@ -267,7 +311,7 @@ local function OrbTarget(rance)
 	if RebornLoad then T = _G.AutoCarry.Crosshair.Attack_Crosshair.target end
 	if RevampedLoaded then T = _G.AutoCarry.Orbwalker.target end
 	if SxOLoad then T = SxO:GetTarget() end
-	if T and T.type == player.type and ValidTarget(T, rance) then return T end
+	if T and T.type == player.type and GetDistance(T, player) < rance then return T end
 end
 
 function LoadMenu()
@@ -343,12 +387,12 @@ function OnSpellcheck()
 end
 
 
---[[function OnProcessSpell(unit, spell)
+function OnProcessSpell(unit, spell)
 	if #ToInterrupt > 0 then
 		for _, ability in pairs(ToInterrupt) do
-			if spell.name == ability and unit.team ~= player.team and GetDistance(unit) < 1100 then
-				if cansleingspell[player.charName][i] ~= nil then 
-					CastSpell(cansleingspell[player.charName][1], unit.x, unit.z)
+			if spell.name == ability and unit.team ~= player.team and GetDistance(unit) < cansleingspell[player.charName].spellrange then
+				if cansleingspell[player.charName] ~= nil then 
+					CastSpell(cansleingspell[player.charName].spell, unit)
 				end
 			end
 		end
@@ -356,23 +400,19 @@ end
 	if unit.type == player.type and unit.team ~= player.team and spell then
 		if gapcloserspell[unit.charName] ~= nil then
 			for i=1, #gapcloserspell[unit.charName] do
-				if spell.name == gapcloserspell[unit.charName][i] then
-					anitGapcloser(Vector(spell.endPos), unit, spell.name)
+				if spell.name == unit:GetSpellData(gapcloserspell[unit.charName].spell).name then
+					if cansleingspell[player.charName] ~= nil then
+						local t = tostring(math.ceil(GetDistance(Vector(spell.endPos), player)))
+						local a = cansleingspell[player.charName].spellRange
+						if t < a then
+							CastSpell(cansleingspell[player.charName].spell, unit)
+						end
+					end
 				end
 			end
 		end
 	end
 end
-
-function anitGapcloser(endPos, unit, name)
-	if GetDistance(endPos, player) < 100 then
-		if player:GetSpellData(_Q).name == name then CastSpell(_Q, unit)
-		elseif player:GetSpellData(_W).name == name then CastSpell(_W, unit)
-		elseif player:GetSpellData(_E).name == name then CastSpell(_E, unit)
-		elseif player:GetSpellData(_R).name == name then CastSpell(_R, unit)
-		end
-	end
-end]]
 
 function GetJungleMob(rance)
 	for _, Mob in pairs(JungleFocusMobs) do
@@ -626,6 +666,10 @@ end
 		
  end
  
+ ---------------------------------------------------------
+------------------------Urgot
+---------------------------------------------------------
+ 
 function Urgot:__init()
  end
  
@@ -753,20 +797,35 @@ end
 		Config.fm:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
  end
  
---[[function jinx:__init()
+---------------------------------------------------------
+------------------------Jinx
+---------------------------------------------------------
+ 
+--[[function Jinx:__init()
+	
 end
  
-function jinx:OnCombo()
+function Jinx:OnCombo()
 	local Target = OrbTarget(1200)
 end
  
-function jinx:OnHarass()
+function Jinx:OnHarass()
 end
  
-function jinx:OnTick()
+function Jinx:OnTick()
+end
+
+function Jinx:Qchange(unit)
+	if unit ~= nil and not unit.dead then
+		local PredictedPos, HitChance = CombinedPos(Target, 0.25, math.huge, myHero, false)
+		if PredictedPos ~= nil and HitChance ~= nil then
+			if 
+			end
+		end
+	end
 end
  
-function jinx:ApplyMenu()
+function Jinx:ApplyMenu()
 
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
@@ -783,8 +842,17 @@ function jinx:ApplyMenu()
 		
 		Config.lc:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.lc:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		
+	Config:addSubMenu("KillSteal", "ks")
+		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
+		Config.ks:addParam("maxr", "Max Range", SCRIPT_PARAM_SLICE, 1000, 1000, 5000, 0)
+		
 end]]
  
+---------------------------------------------------------
+------------------------Ezreal
+--------------------------------------------------------- 
+
 function Ezreal:__init()
 end
 
@@ -793,13 +861,13 @@ function Ezreal:OnCombo()
 	if Target ~= nil then
 		if Config.combo.useq and Qready then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 50, 1150, 2025, player, true)
-			if HitChance >= 2 and GetDistance(CastPosition) < 1200 then
+			if HitChance >= Config.combo.qhitchance and GetDistance(CastPosition) < 1200 then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
 		if Config.combo.usew and Wready then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 50, 1150, 2025, player, true)
-			if HitChance >= 2 and GetDistance(CastPosition) < 1200 then
+			if HitChance >= Config.combo.whitchance and GetDistance(CastPosition) < 1200 then
 				CastSpell(_W, CastPosition.x, CastPosition.z)
 			end
 		end
@@ -811,7 +879,7 @@ function Ezreal:OnHarass()
 	if Target ~= nil then
 		if Config.harass.useq and Qready and player.mana > (player.maxMana*(Config.harass.perq*0.01)) then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 50, 1150, 2025, player, true)
-			if HitChance >= 2 and GetDistance(CastPosition) < 1200 then
+			if HitChance >= Config.combo.qhitchance and GetDistance(CastPosition) < 1200 then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
@@ -874,7 +942,7 @@ function Ezreal:OnFarm()
 	for i, minion in ipairs(EnemyMinions.objects) do
 		if ValidTarget(minion) and GetDistance(minion) <= 1150 and Qready and getDmg("Q", minion, player) > minion.health and Config.fm.useq then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 50, 1150, 2025, player, true)
-			if HitChance >= 2 and GetDistance(CastPosition) < 1150 then
+			if HitChance >= Config.combo.qhitchance and GetDistance(CastPosition) < 1150 then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
@@ -883,7 +951,9 @@ end
 
 function Ezreal:ApplyMenu()
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
+		Config.combo:addParam("qhitchance", "Q Hit Chance", SCRIPT_PARAM_SLICE, 1, 1, 2, 0)
 		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
+		Config.combo:addParam("whitchance", "W Hit Chance", SCRIPT_PARAM_SLICE, 1, 1, 2, 0)
 		
 		Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perq", "Until % Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
@@ -961,7 +1031,7 @@ function KogMaw:OnTick()
 	local i, t
 	local Rrance = champ.GetRrance()
 	for i, t in pairs(enemyHeroes) do
-		if ValidTarget(t) and Config.ks.user and getDmg("R", t, player) > t.health and GetDistance(t, player) > 100 then
+		if ValidTarget(t) and Config.ks.user and getDmg("R", t, player) > t.health then
 			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(t, 1.1, 225, Rrance, math.huge, player)
 			if TargetHitChance >= 2 then
 				CastSpell(_R, CastPosition.x, CastPosition.z)
@@ -1034,7 +1104,61 @@ function KogMaw:ApplyMenu()
 		
 end
  
- 
+function Tristana:__init()
+end
+
+function Tristana:OnCombo()
+	local Target = OrbTarget(1000)
+	if Target ~= nil then
+		if Config.combo.useq and GetDistance(Target) > 600 and Qready then
+			CastSpell(_Q)
+		end
+		if Config.combo.usee and GetDistance(Target) > 600 and Eready then
+			CastSpell(_E, Target)
+		end
+	end
+end
+
+function Tristana:OnHarass()
+	local Target = OrbTarget(player.range)
+	if player.mana > (player.maxMana*(Config.harass.perq*0.01)) then
+		if Config.harass.usee and GetDistance(Target) > 600 then
+			CastSpell(_E, Target)
+		end
+	end
+end
+
+function Tristana:OnTick()
+	local i, t
+	for i, t in pairs(enemyHeroes) do
+		if ValidTarget(t) and Config.ks.user and getDmg("R", t, player) > t.health and GetDistance(t) > 645 then
+			CastSpell(_R, t)
+		end
+	end
+end
+
+function Tristana:OnDraw()
+	if Config.draw.drawe then DrawCircle(player.x, player.y, player.z, 600, TARGB(Config.draw.drawecolor)) end
+	if Config.draw.drawr then DrawCircle(player.x, player.y, player.z, 645, TARGB(Config.draw.drawrcolor)) end
+end
+
+function Tristana:ApplyMenu()
+
+		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
+		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
+		
+		Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
+		Config.harass:addParam("perq", "Until % Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+		
+		Config.draw:addParam("drawe", "Draw E", SCRIPT_PARAM_ONOFF, true)
+		Config.draw:addParam("drawecolor", "Draw E Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
+		Config.draw:addParam("drawr", "Draw R", SCRIPT_PARAM_ONOFF, true)
+		Config.draw:addParam("drawrcolor", "Draw R Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
+		
+	Config:addSubMenu("KillSteal", "ks")
+		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
+end
+
 --[[function Karthus:__init()
 end
 
