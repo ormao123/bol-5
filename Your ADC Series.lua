@@ -1,20 +1,24 @@
 
  --[[
   Update Note
+
+  v 1.03
+   Add Corki Htichance in Menu
+
   v 1.02
    Add Tristana
    Add Anti Gapcloser
    Add Anti Spell
- 
+
   v 1.01
    Add Kog'Maw
- 
+
  ]]
 
 
 
 
-local version = 1.02
+local version = 1.03
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your ADC Series.lua".."?rand="..math.random(1,10000)
@@ -42,6 +46,7 @@ end
 
 local champions = {
 	["Graves"]		= true,
+	--["Kalista"]		= true,
 	--["Lucian"]		= true,
 	--["MissFortune"]	= true,
 	--["Vayne"]		= true,
@@ -49,7 +54,7 @@ local champions = {
 	--["Ashe"]		= true,
 	["Urgot"]		= true,
 	["Ezreal"]		= true,
-	--["Jinx"]		= true,
+	["Jinx"]		= true,
 	--["Kalista"]		= true,
 	--["Caitlyn"]		= true,
 	["KogMaw"]		= true,
@@ -68,7 +73,7 @@ if not champions[myHero.charName] then return end
 
 require 'Sourcelib'
 require "VPrediction"
-	
+
 
 local champ = champions[myHero.charName]
 local HPred, SxO, STS = nil, nil, nil
@@ -82,8 +87,12 @@ local champLoaded = false
 local MMALoad, RebornLoad, SxOLoad, RevampedLoaded = false, false, false, false
 
 local MyminBBox = GetDistance(myHero.minBBox)/2
-local AARange = myHero.range+MyminBBox 
+local AARange = myHero.range+MyminBBox
 
+-- jinx
+
+local JinxQ
+local Kalistastack = {}
 
 local cansleingspell = {
 	["Tristana"] = { spell = _R, spellRange = "645"},
@@ -140,36 +149,42 @@ local InterruptList = {
     { charName = "Warwick", spellName = "InfiniteDuress"}
 }
 local ToInterrupt = {}
- 
+
+
+ if VIP_USER then
+ 	AdvancedCallback:bind('OnApplyBuff', function(s, u, b) OnApplyBuff(s, u, b) end)
+	AdvancedCallback:bind('OnRemoveBuff', function(u, b) OnRemoveBuff(u, b) end)
+	AdvancedCallback:bind('OnUpdateBuff', function(u, b) OnUpdateBuff(u, b) end)
+end
 
 function OnLoad()
 	champ = champ()
 	self = champ
-	
+
 	if not champ then AutoupdaterMsg("There was an error while loading " .. player.charName .. ", please report the shown error to Yours, thanks!") return else champLoaded = true end
-	
+
 	AutoupdaterMsg(player.charName.." Load")
 	OnOrbLoad()
 	VP = VPrediction()
-	
+
 	LoadMenu()
-	
-	for i = 1, heroManager.iCount do 
-        local hero = heroManager:GetHero(i) 
-		for _, champ in pairs(InterruptList) do 
-			if hero.charName == champ.charName then 
-				table.insert(ToInterrupt, champ.spellName) 
+
+	for i = 1, heroManager.iCount do
+        local hero = heroManager:GetHero(i)
+		for _, champ in pairs(InterruptList) do
+			if hero.charName == champ.charName then
+				table.insert(ToInterrupt, champ.spellName)
 			end
-        end 
-    end 
-	
+        end
+    end
+
 	if GetGame().map.shortName == "twistedTreeline" then
-		TwistedTreeline = true 
+		TwistedTreeline = true
 	else
 		TwistedTreeline = false
 	end
 	setting()
-	
+
 end
 
 function setting()
@@ -178,7 +193,7 @@ function setting()
 	JungleFocusMobs = {}
 
 	if not TwistedTreeline then
-		JungleMobNames = { 
+		JungleMobNames = {
 			["SRU_MurkwolfMini2.1.3"]	= true,
 			["SRU_MurkwolfMini2.1.2"]	= true,
 			["SRU_MurkwolfMini8.1.3"]	= true,
@@ -200,7 +215,7 @@ function setting()
 			["SRU_RazorbeakMini3.1.3"]	= true,
 			["SRU_RazorbeakMini3.1.4"]	= true
 		}
-		
+
 		FocusJungleNames = {
 			["SRU_Blue1.1.1"]			= true,
 			["SRU_Blue7.1.1"]			= true,
@@ -228,7 +243,7 @@ function setting()
 			["TT_NGolem5.1.1"]			= true,
 			["TT_NWolf6.1.1"]			= true,
 			["TT_Spiderboss8.1.1"]		= true
-		}		
+		}
 		JungleMobNames = {
 			["TT_NWraith21.1.2"]		= true,
 			["TT_NWraith21.1.3"]		= true,
@@ -242,7 +257,7 @@ function setting()
 			["TT_NWolf26.1.3"]			= true
 		}
 	end
-	
+
 	for i = 0, objManager.maxObjects do
 		local object = objManager:getObject(i)
 		if object and object.valid and not object.dead then
@@ -254,7 +269,37 @@ function setting()
 		end
 	end
 end
+--[[
+function OnRemoveBuff(u, b)
+	if player.charName == "Kalista" and  b.name == "kalistaexpungemarker" and u.type == player.type  then
+		Kalistastack[u.charName].stack = 0
+	end
+	if player.charName == "Jinx" and b.name == "jinxqramp" then
+		JinxQ = 0
+	end
+end
 
+function OnUpdateBuff(u, b, s)
+	if player.charName == "Kalista" and  s ~= nil and b.name == "kalistaexpungemarker" and u.type == player.type then
+		Kalistastack[u.charName].stack = s
+		print(u.charName.." : "..s)
+	end
+	if player.charName == "Jinx" and b.name == "jinxqramp" then
+		JinxQ = s
+	end
+end
+
+function OnApplyBuff(s, u, b)
+	if player.charName == "Kalista" and  b.name == "kalistaexpungemarker" and u.type == player.type  then
+		if Kalistastack[u.charName] == nil then
+			Kalistastack[u.charName] = {stack = 1}
+		end
+	end
+	if player.charName == "Jinx" and b.name == "jinxqramp" then
+		JinxQ = 1
+	end
+end
+]]
 function OnTick()
 	if not champLoaded then return end
 
@@ -262,10 +307,10 @@ function OnTick()
 	if champ.OnTick then
         champ:OnTick()
     end
-	
-	
-	
-	
+
+
+
+
 	if champ.OnCombo and Config.combo.active then
         champ:OnCombo()
     elseif champ.OnHarass and Config.harass.active then
@@ -316,42 +361,42 @@ end
 
 function LoadMenu()
 	Config = MenuWrapper("[Your Series] " .. player.charName, "unique" .. player.charName:gsub("%s+", ""))
-		
+
 		if SxOLoad then
 			Config:SetOrbwalker(SxO)
 		end
-	
+
 		Config = Config:GetHandle()
-	
+
 		if champ.OnCombo then
 			Config:addSubMenu("Combo", "combo")
 				Config.combo:addParam("active", "Combo Active", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 		end
-		
+
 		if champ.OnHarass then
 			Config:addSubMenu("Harass", "harass")
 				Config.harass:addParam("active", "Harass Active", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 		end
-		
+
 		if champ.LineClear then
 			Config:addSubMenu("Line Clear", "lc")
 				Config.lc:addParam("active", "Line Clear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
 		end
-		
+
 		if champ.OnDraw then
 			Config:addSubMenu("Draw", "draw")
 		end
-		
+
 		if champ.OnFarm then
 			Config:addSubMenu("farming","fm")
 				Config.fm:addParam("active", "Farming", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
 		end
-		
-		
-		
+
+
+
 		if champ.ApplyMenu then champ:ApplyMenu() end
-		
-		
+
+
 end
 
 function buffcheck(target)
@@ -366,19 +411,19 @@ function OnSpellcheck()
 	else
 		Qready = false
 	end
-	
+
 	if player:CanUseSpell(_W) == READY then
 		Wready = true
 	else
 		Wready = false
 	end
-	
+
 	if player:CanUseSpell(_E) == READY then
 		Eready = true
 	else
 		Eready = false
 	end
-	
+
 	if player:CanUseSpell(_R) == READY then
 		Rready = true
 	else
@@ -391,7 +436,7 @@ function OnProcessSpell(unit, spell)
 	if #ToInterrupt > 0 then
 		for _, ability in pairs(ToInterrupt) do
 			if spell.name == ability and unit.team ~= player.team and GetDistance(unit) < cansleingspell[player.charName].spellrange then
-				if cansleingspell[player.charName] ~= nil then 
+				if cansleingspell[player.charName] ~= nil then
 					CastSpell(cansleingspell[player.charName].spell, unit)
 				end
 			end
@@ -424,7 +469,7 @@ function GetJungleMob(rance)
 end
 
 function GetBestLineFarmPosition(range, width, objects)
-	local BestPos 
+	local BestPos
 	local BestHit = 0
 	for i, object in ipairs(objects) do
 		local EndPos = Vector(player.visionPos) + range * (Vector(object) - Vector(player.visionPos)):normalized()
@@ -457,7 +502,7 @@ end
 	local Target = OrbTarget(1100)
 	if Target ~= nil then
 		if Config.combo.useq then
-			local CastPosition, HitChance, Hit = VP:GetConeAOECastPosition(Target, 0.25, 25 * math.pi/180, 900, 2000, player)		
+			local CastPosition, HitChance, Hit = VP:GetConeAOECastPosition(Target, 0.25, 25 * math.pi/180, 900, 2000, player)
 			if HitChance >= 2 then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
@@ -470,31 +515,31 @@ end
 		end
 	end
  end
- 
+
  function Graves:OnHarass()
 	local Target = OrbTarget(1100)
 	if Target ~= nil then
 		if Config.harass.useq and player.mana > (player.maxMana*(Config.harass.perq*0.01)) then
-			local CastPosition, HitChance, Hit = VP:GetConeAOECastPosition(Target, 0.25, 25 * math.pi/180, 900, 2000, player)		
+			local CastPosition, HitChance, Hit = VP:GetConeAOECastPosition(Target, 0.25, 25 * math.pi/180, 900, 2000, player)
 			if HitChance >= 2 then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
 		end
 	end
  end
- 
+
 function Graves:OnTick()
 	local i, t
 	for i, t in pairs(enemyHeroes) do
 		if ValidTarget(t) and Config.ks.user and GetDistance(t, player) < 1000 and getDmg("R", t, player) > t.health then
 			local AOECastPosition, MainTargetHitChance, nTargets = VP:GetLineAOECastPosition(t, 0.25, 100, 1100, 2100, player)
 			if MainTargetHitChance >= 2 then
-				CastSpell(_R, AOECastPosition.x, AOECastPosition.z) 
+				CastSpell(_R, AOECastPosition.x, AOECastPosition.z)
 			end
 		end
 	end
  end
- 
+
  function Graves:OnDraw()
 	if Config.draw.drawq then
 		DrawCircle(player.x, player.y, player.z, 900, TARGB(Config.draw.drawqcolor))
@@ -506,7 +551,7 @@ function Graves:OnTick()
 		DrawCircle(player.x, player.y, player.z, 1100, TARGB(Config.draw.drawwcolor))
 	end
  end
- 
+
  function Graves:LineClear()
 	JungleMinions:update()
 	for i, minion in pairs(JungleMinions.objects) do
@@ -532,32 +577,32 @@ end
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
-		
+
 		Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.lc:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.lc:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.draw:addParam("drawq", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawqcolor", "Draw Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("draww", "Draw W", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawwcolor", "Draw W Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("drawr", "Draw R", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawrcolor", "Draw R Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
-		
+
 	Config:addSubMenu("KillSteal", "ks")
 		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
  end
- 
+
 ---------------------------------------------------------
 ------------------------Corki
 ---------------------------------------------------------
 
 function Corki:__init()
-	
+
  end
- 
+
  function Corki:OnCombo()
 	local Target = OrbTarget(1300)
 	if Target ~= nil then
@@ -572,13 +617,13 @@ function Corki:__init()
 		end
 		if GetDistance(Target, player) < 1225 and Rready and Config.combo.user then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
-			if HitChance >= 2 then
+			if HitChance >= Config.combo.rhitchance then
 				CastSpell(_R, CastPosition.x, CastPosition.z)
 			end
 		end
 	end
  end
- 
+
  function Corki:OnHarass()
 	local Target = OrbTarget(1300)
 	if Target ~= nil then
@@ -590,13 +635,13 @@ function Corki:__init()
 		end
 		if GetDistance(Target, player) < 1225 and Rready and Config.harass.user and player.mana > (player.maxMana*(Config.harass.perr*0.01)) then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
-			if HitChance >= 2 then
+			if HitChance >= Config.combo.rhitchance then
 				CastSpell(_R, CastPosition.x, CastPosition.z)
 			end
 		end
 	end
  end
- 
+
 function Corki:OnTick()
 end
 
@@ -641,38 +686,39 @@ end
 		DrawCircle(player.x, player.y, player.z, 1250, TARGB(Config.draw.drawrcolor))
 	end
  end
- 
+
  function Corki:ApplyMenu()
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
-		
+		Config.combo:addParam("rhitchance", "R Hit Chance", SCRIPT_PARAM_SLICE, 1, 1, 2, 0)
+
 		Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 		Config.harass:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perr", "Until % R", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.lc:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.lc:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 		Config.lc:addParam("perq", "Until % ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-	
+
 		Config.draw:addParam("drawq", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawqcolor", "Draw Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("drawr", "Draw R", SCRIPT_PARAM_ONOFF, true)
-		Config.draw:addParam("drawrcolor", "Draw R Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})	
-		
+		Config.draw:addParam("drawrcolor", "Draw R Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
+
 	Config:addSubMenu("KillSteal", "ks")
 		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
-		
+
  end
- 
+
  ---------------------------------------------------------
 ------------------------Urgot
 ---------------------------------------------------------
- 
+
 function Urgot:__init()
  end
- 
+
  function Urgot:OnCombo()
 	local Target = OrbTarget(1200)
 		if Config.combo.usee and Eready then
@@ -681,7 +727,7 @@ function Urgot:__init()
 				CastSpell(_E, CastPosition.x, CastPosition.z)
 			end
 		end
-		
+
 		if Target ~= nil then
 			if Config.combo.useq and Qready and GetDistance(Target) < 1200 then
 				if Config.combo.usew and Wready and GetDistance(Target, player) < 1200 then
@@ -701,7 +747,7 @@ function Urgot:__init()
 			end
 		end
  end
- 
+
  function Urgot:OnHarass()
 	if player.mana > (player.maxMana*(Config.harass.perq*0.01)) then
 		local Target = OrbTarget(1200)
@@ -711,7 +757,7 @@ function Urgot:__init()
 				CastSpell(_E, CastPosition.x, CastPosition.z)
 			end
 		end
-	
+
 		if Target ~= nil and Config.harass.useq then
 			if buffcheck(Target) then
 				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Target, 0.5, 75, 1200)
@@ -727,12 +773,12 @@ function Urgot:__init()
 		end
 	end
  end
- 
+
  function Urgot:OnTick()
  end
- 
+
 function Urgot:LineClear()
-	
+
 	if Config.lc.active and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
 		JungleMinions:update()
 		for i, minion in ipairs(JungleMinions.objects) do
@@ -766,7 +812,7 @@ function Urgot:OnFarm()
 		end
 	end
 end
- 
+
  function Urgot:OnDraw()
 	if Config.draw.drawq then
 		DrawCircle(player.x, player.y, player.z, 1100, TARGB(Config.draw.drawqcolor))
@@ -775,43 +821,43 @@ end
 		DrawCircle(player.x, player.y, player.z, 900, TARGB(Config.draw.drawecolor))
 	end
  end
- 
+
  function Urgot:ApplyMenu()
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
-		
+
 		Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perq", "Until % Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.draw:addParam("drawq", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawqcolor", "Draw Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("drawe", "Draw E", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawecolor", "Draw E Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
-		
+
 		Config.lc:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.lc:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.fm:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.fm:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
  end
- 
+
 ---------------------------------------------------------
 ------------------------Jinx
 ---------------------------------------------------------
- 
---[[function Jinx:__init()
-	
+ --[[
+function Jinx:__init()
+
 end
- 
+
 function Jinx:OnCombo()
 	local Target = OrbTarget(1200)
 end
- 
+
 function Jinx:OnHarass()
 end
- 
+
 function Jinx:OnTick()
 end
 
@@ -819,39 +865,39 @@ function Jinx:Qchange(unit)
 	if unit ~= nil and not unit.dead then
 		local PredictedPos, HitChance = CombinedPos(Target, 0.25, math.huge, myHero, false)
 		if PredictedPos ~= nil and HitChance ~= nil then
-			if 
+			if
 			end
 		end
 	end
 end
- 
+
 function Jinx:ApplyMenu()
 
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
-		
+
 		Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perq", "Until % Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.draw:addParam("draww", "Draw W", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawwcolor", "Draw W Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("drawe", "Draw E", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawecolor", "Draw E Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
-		
+
 		Config.lc:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.lc:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 	Config:addSubMenu("KillSteal", "ks")
 		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 		Config.ks:addParam("maxr", "Max Range", SCRIPT_PARAM_SLICE, 1000, 1000, 5000, 0)
-		
-end]]
- 
+
+end
+ ]]
 ---------------------------------------------------------
 ------------------------Ezreal
---------------------------------------------------------- 
+---------------------------------------------------------
 
 function Ezreal:__init()
 end
@@ -954,27 +1000,27 @@ function Ezreal:ApplyMenu()
 		Config.combo:addParam("qhitchance", "Q Hit Chance", SCRIPT_PARAM_SLICE, 1, 1, 2, 0)
 		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("whitchance", "W Hit Chance", SCRIPT_PARAM_SLICE, 1, 1, 2, 0)
-		
+
 		Config.harass:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perq", "Until % Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.draw:addParam("drawq", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawqcolor", "Draw Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("draww", "Draw W", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawwcolor", "Draw W Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
-		
+
 		Config.lc:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.lc:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 	Config:addSubMenu("KillSteal", "ks")
 		Config.ks:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 		Config.ks:addParam("maxr", "Max Range", SCRIPT_PARAM_SLICE, 1000, 1000, 5000, 0)
 		Config.ks:addParam("minr", "Min Range", SCRIPT_PARAM_SLICE, 500, 100, 1000, 0)
-		
+
 		Config.fm:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 end
- 
+
 function KogMaw:__init()
 end
 
@@ -1084,26 +1130,26 @@ function KogMaw:ApplyMenu()
 		Config.combo:addParam("usew", "Use W", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
-		
+
 		Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perq", "Until % Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.draw:addParam("drawq", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawqcolor", "Draw Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("drawe", "Draw E", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawecolor", "Draw E Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("drawr", "Draw R", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawrcolor", "Draw R Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
-		
+
 		Config.lc:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 		Config.lc:addParam("perq", "Until % R", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 	Config:addSubMenu("KillSteal", "ks")
 		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
-		
+
 end
- 
+
 function Tristana:__init()
 end
 
@@ -1146,19 +1192,47 @@ function Tristana:ApplyMenu()
 
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
-		
+
 		Config.harass:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		Config.harass:addParam("perq", "Until % Harass", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-		
+
 		Config.draw:addParam("drawe", "Draw E", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawecolor", "Draw E Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
 		Config.draw:addParam("drawr", "Draw R", SCRIPT_PARAM_ONOFF, true)
 		Config.draw:addParam("drawrcolor", "Draw R Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
-		
+
 	Config:addSubMenu("KillSteal", "ks")
 		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 end
 
+--[[
+function Kalista:__init()
+end
+
+function Kalista:OnCombo()
+end
+
+function Kalista:OnHarass()
+end
+
+function Kalista:OnDraw()
+end
+
+function Kalista:OnTick()
+	for i , j in ipairs(GetEnemyHeroes()) do
+		if not Kalistastack[j.charName].stack == nil or not Kalistastack[j.charName].stack-1 < 0 then
+			if GetDistance(j) < 400 then
+			if j.health <= (getDmg("E", j, myHero)*(Kalistastack[j.charName].stack-1)) then
+				CastSpell(_E)
+			end
+			end
+		end
+	end
+end
+
+function Kalista:ApplyMenu()
+end
+]]
 --[[function Karthus:__init()
 end
 
@@ -1173,4 +1247,3 @@ end
 
 function Karthus:ApplyMenu()
 end]]
- 
