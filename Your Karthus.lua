@@ -18,6 +18,7 @@ local recall = false
 local j, CanKillChampion
 local status
 local dead = false
+local player = myHero
 
 local ts
 local VP, SxO, dp = nil, nil, nil
@@ -29,7 +30,7 @@ require "DivinePred"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.12
+local version = 1.13
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -111,6 +112,7 @@ function LoadMenu()
 		ConfigY:addSubMenu("ads", "ads")
 			ConfigY.ads:addParam("adsr", "Use R After You dead", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.ads:addParam("pa", "Passive Active Auto Attack", SCRIPT_PARAM_ONOFF, true)
+			ConfigY.ads:addParam("dm", "Damage Manager", SCRIPT_PARAM_ONOFF, true)
 
 		ConfigY:addSubMenu("draw", "draw")
 			ConfigY.draw:addParam("drawq", "draw Q", SCRIPT_PARAM_ONOFF, true)
@@ -119,6 +121,25 @@ function LoadMenu()
 
 		ConfigY:addSubMenu("orbWalk", "orbWalk")
 			SxO:LoadToMenu(ConfigY.orbWalk)
+end
+
+function GetHPBarPos(enemy)
+	enemy.barData = {PercentageOffset = {x = -0.05, y = 0}}--GetEnemyBarData()
+	local barPos = GetUnitHPBarPos(enemy)
+	local barPosOffset = GetUnitHPBarOffset(enemy)
+	local barOffset = { x = enemy.barData.PercentageOffset.x, y = enemy.barData.PercentageOffset.y }
+	local barPosPercentageOffset = { x = enemy.barData.PercentageOffset.x, y = enemy.barData.PercentageOffset.y }
+	local BarPosOffsetX = 171
+	local BarPosOffsetY = 46
+	local CorrectionY = 39
+	local StartHpPos = 31
+	
+	barPos.x = math.floor(barPos.x + (barPosOffset.x - 0.5 + barPosPercentageOffset.x) * BarPosOffsetX + StartHpPos)
+	barPos.y = math.floor(barPos.y + (barPosOffset.y - 0.5 + barPosPercentageOffset.y) * BarPosOffsetY + CorrectionY)
+						
+	local StartPos = Vector(barPos.x , barPos.y, 0)
+	local EndPos =  Vector(barPos.x + 108 , barPos.y , 0)
+	return Vector(StartPos.x, StartPos.y, 0), Vector(EndPos.x, EndPos.y, 0)
 end
 
 function initialize()
@@ -295,6 +316,34 @@ function OnDraw()
 				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, 100, 100+j*20, 0xFFFFFF00)
 			end
 		end
+	end
+	for i, j in ipairs(GetEnemyHeroes()) do
+		if GetDistance(j) < 2000 and not j.dead and ConfigY.ads.dm then
+			local pos = GetHPBarPos(j)
+			local dmg, Qdamage = GetSpellDmg(j)
+			if dmg == "CanComboKill" then
+				DrawText("Can Combo Kill!",18 , pos.x, pos.y-48, 0xffff0000)
+			else
+				local pos2 = ((j.health - dmg)/j.maxHealth)*100
+				DrawLine(pos.x+pos2, pos.y, pos.x+pos2, pos.y-30, 1, 0xffff0000)
+				local hit = tostring(math.ceil(j.health/Qdamage))
+				DrawText("Q hit : "..hit,18 , pos.x, pos.y-48, 0xffff0000)
+			end
+		end
+	end
+end
+
+function GetSpellDmg(enemy)
+	local combodmg
+	local Qdmg = getDmg("Q", enemy, player)
+	local Edmg = getDmg("E", enemy, player)
+	local Rdmg = getDmg("R", enemy, player)
+	if enemy.health < Qdmg+Edmg+Rdmg then
+		combodmg = "CanComboKill"
+		return combodmg
+	else
+		combodmg = Qdmg+Edmg+Rdmg
+		return combodmg, Qdmg
 	end
 end
 
