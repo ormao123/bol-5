@@ -28,7 +28,7 @@ require "DivinePred"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.10
+local version = 1.11
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -177,7 +177,7 @@ function OnCombo()
 end
 
 function OnHarass()
-	if ConfigY.harass.harasstoggle and recall() == false or ConfigY.harass.harassactive then
+	if ConfigY.harass.harasstoggle and recall == false or ConfigY.harass.harassactive then
 		for i, target in pairs(GetEnemyHeroes()) do
 			if ConfigY.pred.choose == 1 then
 				local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(target, 0.5, 75, 875, 1700, player)
