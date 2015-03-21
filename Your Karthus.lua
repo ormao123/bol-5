@@ -30,7 +30,7 @@ require "DivinePred"
 require "SxOrbWalk"
 require "SourceLib"
 
-local version = 1.13
+local version = 1.14
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -203,28 +203,28 @@ function OnCombo()
 	ts:update()
 	if ts.target ~= nil then
 		if ConfigY.combo.activecombo then
-			if ConfigY.pred.choose == 1 then
+			if ConfigY.pred.choose == 1 and ConfigY.combo.useq then
 				local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(ts.target, 0.5, 75, 875, 1700, player)
 				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.target.dead == false then
 					if Qready and ConfigY.combo.useq then
 						CastSpell(_Q, CastPosition.x, CastPosition.z)
 					end
 				end
-			elseif ConfigY.pred.choose == 2 then
+			elseif ConfigY.pred.choose == 2 and ConfigY.combo.useq then
 				local target = DPTarget(ts.target)
 				local state,hitPos,perc = dp:predict(target,CircleSS(math.huge,945,75,600,math.huge))
 				if state == SkillShot.STATUS.SUCCESS_HIT then
 					CastSpell(_Q,hitPos.x,hitPos.z)
 				end
 			end
-			if ConfigY.pred.choose == 1 then
+			if ConfigY.pred.choose == 1 and ConfigY.combo.usew then
 				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 10, 1000)
 				if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
 					if Wready and ConfigY.combo.usew then
 						CastSpell(_W, CastPosition.x, CastPosition.z)
 					end
 				end
-			elseif ConfigY.pred.choose == 2 then
+			elseif ConfigY.pred.choose == 2 and ConfigY.combo.usew then
 				local target = DPTarget(ts.target)
 				local state,hitPos,perc = dp:predict(target,CircleSS(math.huge,1000,10,160,math.huge))
 					if state == SkillShot.STATUS.SUCCESS_HIT then
