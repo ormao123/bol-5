@@ -5,7 +5,7 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
 
-local version = 1.15
+local version = 1.16
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -341,7 +341,7 @@ function OnDraw()
 		for j, CanKillChampion in pairs(EnemyHeroes) do
 			if stat(CanKillChampion) == "Can" then
 				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, 100, 100+j*20, 0xFFFF0000)
-			else
+			elseif stat(CanKillChampion) == "Cant" or stat(CanKillChampion) == "dead" then
 				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, 100, 100+j*20, 0xFFFFFF00)
 			end
 		end
@@ -377,10 +377,13 @@ function GetSpellDmg(enemy)
 end
 
 function stat(unit)
-	if getDmg("R", unit, myHero) > unit.health then
+	if getDmg("R", unit, myHero) > unit.health and not unit.dead then
 		status = "Can"
 	else
 		status = "Cant"
+	end
+	if unit.dead then
+		status = "dead"
 	end
 	return status
 end
