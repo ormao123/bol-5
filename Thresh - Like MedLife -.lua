@@ -7,7 +7,7 @@ if not VIP_USER or myHero.charName ~= "Thresh" then return end
 end
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Thresh - Like MedLife -:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
---[[local version = 1.15
+local version = 1.15
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Thresh - Like MedLife -.lua".."?rand="..math.random(1,10000)
@@ -30,7 +30,7 @@ if AUTO_UPDATE then
 	else
 		AutoupdaterMsg("Error downloading version info")
 	end
-end]]
+end
 
 local SCRIPT_LIBS = {
 	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
