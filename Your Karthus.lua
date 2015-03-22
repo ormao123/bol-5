@@ -97,7 +97,7 @@ local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthu
 
 local SCRIPT_INFO = {
 	["Name"] = "Your Kathus",
-	["Version"] = 1.21,
+	["Version"] = 1.22,
 	["Author"] = {
 		["Yours"] = "http://forum.botoflegends.com/user/145247-yours/"
 	},
@@ -249,7 +249,7 @@ function LoadMenu()
 			--ConfigY.killsteal:addParam("killstealhitchance", "Killsteal hit chance", SCRIPT_PARAM_LIST, 1, {"1", "2", "3", "4", "5"})
 
 		ConfigY:addSubMenu("ads", "ads")
-			ConfigY.ads:addParam("adsr", "Use R After You dead", SCRIPT_PARAM_ONOFF, true)
+			--ConfigY.ads:addParam("adsr", "Use R After You dead", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.ads:addParam("autoff", "E Auto Off", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.ads:addParam("pa", "Passive Active Auto Attack", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.ads:addParam("dm", "Damage Manager", SCRIPT_PARAM_ONOFF, true)
@@ -503,7 +503,7 @@ function Farm()
 	if ConfigY.farm.farm then
 		enemyMinions:update()
 		for i, minion in ipairs(enemyMinions.objects) do
-			if ValidTarget(minion) and GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero)-50 > minion.health and ConfigY.farm.useq then
+			if ValidTarget(minion) and GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero) > minion.health and ConfigY.farm.useq then
 				if ConfigY.pred.choose == 1 then
 					local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(minion, 0.5, 75, 875, 1700, player)
 					if CastPosition and HitChance >= 2 then
