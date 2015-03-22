@@ -379,9 +379,6 @@ function OnCombo()
 			if CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana >= (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
 				CastSpell(_E)
 			end
-			if CountEnemyHeroInRange(eRange) == 0 and EActive == true and Eready then
-				CastSpell(_E)
-			end
 		end
 	end
 end
@@ -409,8 +406,6 @@ function OnHarass()
 			end
 
 			if CountEnemyHeroInRange(eRange) == 0 and EActive and Eready then
-				CastSpell(_E)
-			elseif myHero.mana < (myHero.maxMana*(ConfigY.harass.pere*0.01)) and EActive and Eready then
 				CastSpell(_E)
 			end
 		end
