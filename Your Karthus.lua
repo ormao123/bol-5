@@ -83,6 +83,11 @@ v, 1.18
 
 Farming Fix
 
+
+v. 1.21
+
+Add Menu Auto E Off
+
 ]]
 
 
@@ -92,7 +97,7 @@ local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthu
 
 local SCRIPT_INFO = {
 	["Name"] = "LegendKarthus",
-	["Version"] = 1.19,
+	["Version"] = 1.21,
 	["Author"] = {
 		["Yours"] = "http://forum.botoflegends.com/user/145247-yours/"
 	},
@@ -245,6 +250,7 @@ function LoadMenu()
 
 		ConfigY:addSubMenu("ads", "ads")
 			ConfigY.ads:addParam("adsr", "Use R After You dead", SCRIPT_PARAM_ONOFF, true)
+			ConfigY.ads:addParam("autoff", "E Auto Off", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.ads:addParam("pa", "Passive Active Auto Attack", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.ads:addParam("dm", "Damage Manager", SCRIPT_PARAM_ONOFF, true)
 
@@ -291,7 +297,7 @@ function OnTick()
 	OnHarass()
 	OnSpellcheck()
 	Farm()
-	if CountEnemyHeroInRange(eRange) == 0 and EActive == true and Eready then
+	if CountEnemyHeroInRange(eRange) == 0 and EActive == true and Eready and ConfigY.ads.autoff then
 		CastSpell(_E)
 	end
 	if dead then
