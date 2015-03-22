@@ -5,22 +5,22 @@ assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAA
 --[[
 
 v. 1.02
- 
+
 Q Farming
 
- 
+
 v. 1.03
- 
+
 Add ManaManager
 
- 
+
 v. 1.04
 
 Add KillSteal Mark
 
 E Fix
 
- 
+
 v. 1.05
 
 Add Harass Key (Not Toggle)
@@ -39,7 +39,7 @@ Now you not harass when recall
 v. 1.06
 
 Delete Q manaManager In Combo
- 
+
 
 v. 1.10
 
@@ -78,6 +78,11 @@ v, 1.17
 
 Add OrbWalk Checker
 
+
+v, 1.17
+
+Farming Fix
+
 ]]
 
 
@@ -86,7 +91,7 @@ Add OrbWalk Checker
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
 
-local version = 1.17
+local version = 1.18
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -131,7 +136,7 @@ function Initiate()
 				DownloadFile(LIBRARY_URL,LIB_PATH..LIBRARY..".lua",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
 			end
 		end
-	end	
+	end
 	if DOWNLOADING_LIBS then return true end
 end
 if Initiate() then return end
@@ -193,7 +198,7 @@ end
 
 
 function OnLoad()
-	
+
 	OnOrbLoad()
 
 	VP = VPrediction()
@@ -268,10 +273,10 @@ function GetHPBarPos(enemy)
 	local BarPosOffsetY = 46
 	local CorrectionY = 39
 	local StartHpPos = 31
-	
+
 	barPos.x = math.floor(barPos.x + (barPosOffset.x - 0.5 + barPosPercentageOffset.x) * BarPosOffsetX + StartHpPos)
 	barPos.y = math.floor(barPos.y + (barPosOffset.y - 0.5 + barPosPercentageOffset.y) * BarPosOffsetY + CorrectionY)
-						
+
 	local StartPos = Vector(barPos.x , barPos.y, 0)
 	local EndPos =  Vector(barPos.x + 108 , barPos.y , 0)
 	return Vector(StartPos.x, StartPos.y, 0), Vector(EndPos.x, EndPos.y, 0)
