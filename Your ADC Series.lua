@@ -18,7 +18,7 @@
 
 
 
-local version = 1.03
+local version = 1.04
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your ADC Series.lua".."?rand="..math.random(1,10000)
@@ -433,7 +433,7 @@ end
 
 
 function OnProcessSpell(unit, spell)
-	if #ToInterrupt > 0 then
+	--[[if #ToInterrupt > 0 then
 		for _, ability in pairs(ToInterrupt) do
 			if spell.name == ability and unit.team ~= player.team and GetDistance(unit) < cansleingspell[player.charName].spellrange then
 				if cansleingspell[player.charName] ~= nil then
@@ -456,7 +456,7 @@ function OnProcessSpell(unit, spell)
 				end
 			end
 		end
-	end
+	end]]
 end
 
 function GetJungleMob(rance)
