@@ -6,16 +6,16 @@ if not VIP_USER or myHero.charName ~= "Thresh" then return end
 	AdvancedCallback:bind('OnUpdateBuff', function(u, b) OnUpdateBuff(u, b) end)
 end
 
-local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Thresh - Like MedLife -:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Thresh - Like MadLife -:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 local version = 1.15
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/jineyne/bol/master/Thresh - Like MedLife -.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = LIB_PATH.."Thresh - Like MedLife -.lua"
+local UPDATE_PATH = "/jineyne/bol/master/Thresh - Like MadLife -.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = LIB_PATH.."Thresh - Like MadLife -.lua"
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 if AUTO_UPDATE then
-	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/version/Thresh - Like MedLife -.version")
+	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/version/Thresh - Like MadLife -.version")
 	if ServerData then
 		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
 		if ServerVersion then
