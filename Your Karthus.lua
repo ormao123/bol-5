@@ -95,23 +95,31 @@ Add Menu Auto E Off
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local SCRIPT_INFO = {
-	["Name"] = "Your Kathus",
-	["Version"] = 1.22,
-	["Author"] = {
-		["Yours"] = "http://forum.botoflegends.com/user/145247-yours/"
-	},
-	["Credits"] = {
-		["Yours"] = "http://forum.botoflegends.com/user/145247-yours/"
-	},
-}
-local SCRIPT_UPDATER = {
-	["Activate"] = true,
-	["Script"] = SCRIPT_PATH..GetCurrentEnv().FILE_NAME,
-	["URL_HOST"] = "raw.github.com",
-	["URL_PATH"] = "/jineyne/bol/master/Your Karthus.lua",
-	["URL_VERSION"] = "/jineyne/bol/master/Your Karthus.version"
-}
+local version = 1.23
+local AUTO_UPDATE = true
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = LIB_PATH.."Your Karthus.lua"
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+
+if AUTO_UPDATE then
+	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/Your Karthus.version")
+	if ServerData then
+		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
+		if ServerVersion then
+			if tonumber(version) < ServerVersion then
+				AutoupdaterMsg("New version available"..ServerVersion)
+				AutoupdaterMsg("Updating, please don't press F9")
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
+			else
+				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+			end
+		end
+	else
+		AutoupdaterMsg("Error downloading version info")
+	end
+end
+
 local SCRIPT_LIBS = {
 	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
 	["VPrediction"] = "https://raw.github.com/LegendBot/Scripts/master/Common/VPrediction.lua",
@@ -134,9 +142,6 @@ function Initiate()
 		end
 	end
 	if DOWNLOADING_LIBS then return true end
-	if SCRIPT_UPDATER["Activate"] then
-		SourceUpdater("<font color=\"#6699ff\">"..SCRIPT_INFO["Name"].."</font>", SCRIPT_INFO["Version"], SCRIPT_UPDATER["URL_HOST"], SCRIPT_UPDATER["URL_PATH"], SCRIPT_UPDATER["Script"], SCRIPT_UPDATER["URL_VERSION"]):CheckUpdate()
-	end
 end
 if Initiate() then return end
 
@@ -503,7 +508,7 @@ function Farm()
 	if ConfigY.farm.farm then
 		enemyMinions:update()
 		for i, minion in ipairs(enemyMinions.objects) do
-			if ValidTarget(minion) and GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero) > minion.health and ConfigY.farm.useq then
+			if ValidTarget(minion) and GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero)*0.75 > minion.health and ConfigY.farm.useq then
 				if ConfigY.pred.choose == 1 then
 					local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(minion, 0.5, 75, 875, 1700, player)
 					if CastPosition and HitChance >= 2 then
