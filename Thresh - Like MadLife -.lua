@@ -7,7 +7,7 @@ if not VIP_USER or myHero.charName ~= "Thresh" then return end
 end
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Thresh - Like MadLife -:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
-local version = 1.15
+local version = 1.00
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Thresh - Like MadLife -.lua".."?rand="..math.random(1,10000)
