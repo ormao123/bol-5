@@ -96,7 +96,7 @@ Add Menu Auto E Off
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
 local SCRIPT_INFO = {
-	["Name"] = "LegendKarthus",
+	["Name"] = "Your Kathus",
 	["Version"] = 1.21,
 	["Author"] = {
 		["Yours"] = "http://forum.botoflegends.com/user/145247-yours/"
