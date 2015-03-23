@@ -88,6 +88,10 @@ v. 1.21
 
 Add Menu Auto E Off
 
+
+v. 1.24
+
+Fix OrbWalk
 ]]
 
 
@@ -95,7 +99,7 @@ Add Menu Auto E Off
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.23
+local version = 1.24
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -200,6 +204,16 @@ function OnOrbLoad()
 	end
 end
 
+local function OrbTarget(rance)
+	local T
+	if MMALoad then T = _G.MMA_Target end
+	if RebornLoad then T = _G.AutoCarry.Crosshair.Attack_Crosshair.target end
+	if RevampedLoaded then T = _G.AutoCarry.Orbwalker.target end
+	if SxOLoad then T = SxO:GetTarget() end
+	if T and T.type == player.type and ValidTarget(T, rance) then return T end
+end
+
+
 
 function OnLoad()
 
@@ -263,9 +277,11 @@ function LoadMenu()
 			ConfigY.draw:addParam("drawq", "draw Q", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.draw:addParam("draww", "draw W", SCRIPT_PARAM_ONOFF, true)
 			ConfigY.draw:addParam("drawe", "draw E", SCRIPT_PARAM_ONOFF, true)
-
-		ConfigY:addSubMenu("orbWalk", "orbWalk")
-			SxO:LoadToMenu(ConfigY.orbWalk)
+		
+		if SxOLoad then
+			ConfigY:addSubMenu("orbWalk", "orbWalk")
+				SxO:LoadToMenu(ConfigY.orbWalk)
+		end
 end
 
 function GetHPBarPos(enemy)
@@ -311,31 +327,31 @@ function OnTick()
 end
 
 function PassiveActive()
-	ts:update()
-	if ts.target ~= nil and ConfigY.ads.pa then
+	local Target = OrbTarget(wRange)
+	if Target ~= nil and ConfigY.ads.pa then
 		if ConfigY.pred.choose == 1 then
-			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(ts.target, 0.5, 75, 875, 1700, player)
-			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.target.dead == false then
+			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(Target, 0.5, 75, 875, 1700, player)
+			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and Target.dead == false then
 				if Qready and ConfigY.combo.useq then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
 			end
 		elseif ConfigY.pred.choose == 2 then
-			local target = DPTarget(ts.target)
+			local target = DPTarget(Target)
 			local state,hitPos,perc = dp:predict(target,CircleSS(math.huge,945,75,600,math.huge))
 			if state == SkillShot.STATUS.SUCCESS_HIT then
 				CastSpell(_Q,hitPos.x,hitPos.z)
 			end
 		end
 		if ConfigY.pred.choose == 1 then
-			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 10, 1000)
+			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Target, 0.5, 10, 1000)
 			if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
 				if Wready and ConfigY.combo.usew then
 					CastSpell(_W, CastPosition.x, CastPosition.z)
 				end
 			end
 		elseif ConfigY.pred.choose == 2 then
-			local target = DPTarget(ts.target)
+			local target = DPTarget(Target)
 			local state,hitPos,perc = dp:predict(target,CircleSS(math.huge,1000,10,160,math.huge))
 			if state == SkillShot.STATUS.SUCCESS_HIT then
 				CastSpell(_W,hitPos.x,hitPos.z)
@@ -345,32 +361,32 @@ function PassiveActive()
 end
 
 function OnCombo()
-	ts:update()
-	if ts.target ~= nil then
+	local Target = OrbTarget(wRange)
+	if Target ~= nil then
 		if ConfigY.combo.activecombo then
 			if ConfigY.pred.choose == 1 and ConfigY.combo.useq then
-				local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(ts.target, 0.5, 75, 875, 1700, player)
-				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.target.dead == false then
+				local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(Target, 0.5, 75, 875, 1700, player)
+				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and Target.dead == false then
 					if Qready and ConfigY.combo.useq then
 						CastSpell(_Q, CastPosition.x, CastPosition.z)
 					end
 				end
 			elseif ConfigY.pred.choose == 2 and ConfigY.combo.useq then
-				local target = DPTarget(ts.target)
+				local target = DPTarget(Target)
 				local state,hitPos,perc = dp:predict(target,CircleSS(math.huge,945,75,600,math.huge))
 				if state == SkillShot.STATUS.SUCCESS_HIT then
 					CastSpell(_Q,hitPos.x,hitPos.z)
 				end
 			end
 			if ConfigY.pred.choose == 1 and ConfigY.combo.usew then
-				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 10, 1000)
+				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Target, 0.5, 10, 1000)
 				if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
 					if Wready and ConfigY.combo.usew then
 						CastSpell(_W, CastPosition.x, CastPosition.z)
 					end
 				end
 			elseif ConfigY.pred.choose == 2 and ConfigY.combo.usew then
-				local target = DPTarget(ts.target)
+				local target = DPTarget(Target)
 				local state,hitPos,perc = dp:predict(target,CircleSS(math.huge,1000,10,160,math.huge))
 					if state == SkillShot.STATUS.SUCCESS_HIT then
 						CastSpell(_W,hitPos.x,hitPos.z)
@@ -385,17 +401,17 @@ end
 
 function OnHarass()
 	if ConfigY.harass.harasstoggle and recall == false or ConfigY.harass.harassactive then
-		ts:update()
-		if ts.target ~= nil then
+		local Target = OrbTarget(wRange)
+		if Target ~= nil then
 			if ConfigY.pred.choose == 1 then
-				local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(ts.target, 0.5, 75, 875, 1700, player)
-				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.target.dead == false then
+				local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(Target, 0.5, 75, 875, 1700, player)
+				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and Target.dead == false then
 					if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
 						CastSpell(_Q, CastPosition.x, CastPosition.z)
 					end
 				end
 			elseif ConfigY.pred.choose == 2 then
-				local target = DPTarget(ts.target)
+				local target = DPTarget(Target)
 				local state,hitPos,perc = dp:predict(target,CircleSS(math.huge,945,75,600,math.huge))
 				if state == SkillShot.STATUS.SUCCESS_HIT and Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
 					CastSpell(_Q,hitPos.x,hitPos.z)

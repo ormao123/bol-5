@@ -7,11 +7,12 @@ if not VIP_USER or myHero.charName ~= "Thresh" then return end
 end
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Thresh - Like MadLife -:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
-local version = 1.00
+
+local version = 1.01
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Thresh - Like MadLife -.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = LIB_PATH.."Thresh - Like MadLife -.lua"
+local UPDATE_FILE_PATH = SCRIPT_PATH.."Thresh - Like MadLife -.lua"
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 if AUTO_UPDATE then
@@ -36,7 +37,7 @@ local SCRIPT_LIBS = {
 	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
 	["VPrediction"] = "https://raw.github.com/LegendBot/Scripts/master/Common/VPrediction.lua",
 	["DivinePred"] = "http://divinetek.rocks/divineprediction/DivinePred.lua",
-	["SxOrbWalk"] = "https://github.com/Superx321/BoL/blob/master/common/SxOrbWalk.lua",
+	--["SxOrbWalk"] = "https://github.com/Superx321/BoL/blob/master/common/SxOrbWalk.lua",
 }
 function Initiate()
 	for LIBRARY, LIBRARY_URL in pairs(SCRIPT_LIBS) do
@@ -53,7 +54,7 @@ function Initiate()
 				DownloadFile(LIBRARY_URL,LIB_PATH..LIBRARY..".lua",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
 			end
 		end
-	end	
+	end
 	if DOWNLOADING_LIBS then return true end
 end
 if Initiate() then return end
@@ -87,7 +88,7 @@ local gapcloserspell = {
         ['Sejuani']     = {true, spell = _Q,},
         ['Shen']        = {true, spell = _E,},
         ['Tristana']    = {true, spell = _W,},
-		['Thresh']		= {true, spell = _Q},
+		['Thresh']		= {true, spell = _Q,},
         --['Tryndamere']  = {true, spell = 'Slash',,
         ['XinZhao']     = {true, spell = _E,}, -- Targeted ability
 }
@@ -115,7 +116,7 @@ local dp, VP, SxO, STS = nil, nil, nil, nil
 local player = myHero
 local enemyHeroes = GetEnemyHeroes()
 local allyHeroes = GetAllyHeroes()
-local Qrange, Wrange, Erange, Rrange = 1075, 950, 500, 450 
+local Qrange, Wrange, Erange, Rrange = 1075, 950, 500, 450
 local Healrange = 0
 
 local Mikael = 3222
@@ -125,7 +126,7 @@ function LoadItem()
 	ItemNames				= {
 		[3222]				= "Mikael's Crucible",
 	}
-	
+
 	_G.ITEM_1				= 06
 	_G.ITEM_2				= 07
 	_G.ITEM_3				= 08
@@ -133,13 +134,13 @@ function LoadItem()
 	_G.ITEM_5				= 10
 	_G.ITEM_6				= 11
 	_G.ITEM_7				= 12
-	
+
 	___GetInventorySlotItem	= rawget(_G, "GetInventorySlotItem")
 	_G.GetInventorySlotItem	= GetSlotItem
 end
 
 function GetSlotItem(id, unit)
-	
+
 	unit 		= unit or myHero
 
 	if (not ItemNames[id]) then
@@ -147,7 +148,7 @@ function GetSlotItem(id, unit)
 	end
 
 	local name	= ItemNames[id]
-	
+
 	for slot = ITEM_1, ITEM_7 do
 		local item = unit:GetSpellData(slot).name
 		if ((#item > 0) and (item:lower() == name:lower())) then
@@ -156,7 +157,31 @@ function GetSlotItem(id, unit)
 	end
 end
 
+function OnOrbLoad()
+	if _G.MMA_LOADED then
+		AutoupdaterMsg("MMA LOAD")
+		MMALoad = true
+	elseif _G.AutoCarry then
+		if _G.AutoCarry.Helper then
+			AutoupdaterMsg("SIDA AUTO CARRY: REBORN LOAD")
+			RebornLoad = true
+		else
+			AutoupdaterMsg("SIDA AUTO CARRY: REVAMPED LOAD")
+			RevampedLoaded = true
+		end
+	elseif _G.Reborn_Loaded then
+		DelayAction(OnOrbLoad, 1)
+	elseif FileExist(LIB_PATH .. "SxOrbWalk.lua") then
+		AutoupdaterMsg("SxOrbWalk Load")
+		require 'SxOrbWalk'
+		SxO = SxOrbWalk()
+		SxOLoad = true
+	end
+end
+
+
 function OnLoad()
+	 OnOrbLoad()
 	for i = 1, heroManager.iCount do
         local hero = heroManager:GetHero(i)
 		for _, champ in pairs(InterruptList) do
@@ -165,25 +190,24 @@ function OnLoad()
 			end
         end
     end
-	
+
 	STS 	= SimpleTS()
 	VP 		= VPrediction()
 	dp 		= DivinePred()
-	SxO 	= SxOrbWalk() 
-	
+
 	OnLoadMenu()
-	
+
 	healpos = GetSummoner()
 end
 
 function OnTick()
 
 	OnSpellcheck()
-	
+
 	if Config.key.combo then
 		Combo()
 	end
-	
+
 	help()
 end
 
@@ -204,49 +228,53 @@ end
 
 function OnLoadMenu()
 	Config = MenuWrapper("[Your] " .. player.charName, "unique" .. player.charName:gsub("%s+", ""))
-	
+
 		Config:SetTargetSelector(STS)
-		Config:SetOrbwalker(SxO)
+		if SxOLoad then
+			Config:SetOrbwalker(SxO)
+		end
 		Config = Config:GetHandle()
-		
+
 		Config:addSubMenu("Key", "key")
 			Config.key:addParam("combo", "Combo Active", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-			
+
 		Config:addSubMenu("Ads", "ads")
 			Config.ads:addParam("pred", "Chooes Pred Type", SCRIPT_PARAM_LIST, 1, {"DivinePred", "VPrediction"})
-			
+
 		Config:addSubMenu("Q Setting", "qsetting")
 			Config.qsetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
-			
+			--Config.qsetting:addParam("useq22", "Use Q2", SCRIPT_PARAM_ONOFF, true)
+
 		Config:addSubMenu("W Setting", "wsetting")
 			Config.wsetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			Config.wsetting:addParam("help", "Help", SCRIPT_PARAM_ONOFF, true)
 			Config.wsetting:addParam("helparound", "Help W around enemy", SCRIPT_PARAM_SLICE, 1, 1, 5, 0)
 			Config.wsetting:addParam("helprange", "Help W help range", SCRIPT_PARAM_SLICE, 100, 100, 1000, 0)
 			Config.wsetting:addParam("cc", "Help W to cc", SCRIPT_PARAM_ONOFF, true)
-		
+
 		Config:addSubMenu("E Setting", "esetting")
 			Config.esetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			--Config.esetting:addParam("gape", "Use E to Gapcloser", SCRIPT_PARAM_ONOFF, true)
+			Config.esetting:addParam("cans", "Use E to runaway cansle", SCRIPT_PARAM_ONOFF, true)
 			Config.esetting:addParam("inte", "Use E to Interrupt", SCRIPT_PARAM_ONOFF, true)
 			Config.esetting:addParam("pull", "Pull E in Combo", SCRIPT_PARAM_ONOFF, true)
-		
+
 		Config:addSubMenu("R Setting", "rsetting")
 			Config.rsetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			Config.rsetting:addParam("perr", "Use R", SCRIPT_PARAM_SLICE, 1, 1, 5, 0)
-			
+
 		Config:addSubMenu("Item Setting", "isetting")
 			Config.isetting:addParam("use", "Use Item", SCRIPT_PARAM_ONOFF, true)
 			Config.isetting:addSubMenu("Mikael's Crucible", "Mikael")
 				Config.isetting.Mikael:addParam("Mikael", "Mikael's Crucible", SCRIPT_PARAM_ONOFF, true)
 				Config.isetting.Mikael:addParam("Stun", "Use Stun", SCRIPT_PARAM_ONOFF, true)
 				--Config.isetting.Mikael:addParam()
-			
+
 		Config:addSubMenu("Summoner Setting", "ssetting")
 			Config.ssetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			Config.ssetting:addParam("heal", "heal", SCRIPT_PARAM_ONOFF, true)
 			Config.ssetting:addParam("healper", "use heal %", SCRIPT_PARAM_SLICE, 30, 5, 100, 0)
-			
+
 		Config:addSubMenu("Draw", "draw")
 			Config.draw:addParam("qdraw", "Q Draw", SCRIPT_PARAM_ONOFF, true)
 				Config.draw:addParam("qcolor","Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
@@ -264,10 +292,10 @@ function Combo()
 		if Qready and GetDistance(target) < Qrange and Config.qsetting.use and not target.dead  then
 			CastQ(target)
 		end
-		
+
 		if Wready and Config.wsetting.use and not target.dead then
 		end
-		
+
 		if Eready and GetDistance(target) < Erange and Config.esetting.use and not target.dead  then
 			if Config.esetting.pull then
 				CastE(behind(target))
@@ -285,7 +313,7 @@ end
 function help()
 	if Config.wsetting.help then
 		for i, j in pairs(allyHeroes) do
-			if GetNearEnemy(j, Config.wsetting.helprange) >= Config.wsetting.helparound then
+			if GetNearEnemy(j, Config.wsetting.helprange) >= Config.wsetting.helparound and GetDistance(j) < Wrange then
 				CastW(j)
 			end
 		end
@@ -310,7 +338,7 @@ function CastQ(t)
 	if Config.ads.pred == 1 then
 		if player:GetSpellData(_Q).name ~= "threshqleap" then
 			local Target = DPTarget(t)
-			local state,hitPos,perc = dp:predict(Target, LineSS(1150, Qrange, 60, 0.5, 0))
+			local state,hitPos,perc = dp:predict(Target, LineSS(3300, Qrange, 60, 0.5, 0))
 			if state == SkillShot.STATUS.SUCCESS_HIT then
 				CastSpell(_Q, hitPos.x, hitPos.z)
 			end
@@ -408,24 +436,33 @@ end
 function OnProcessSpell(unit, spell)
 	if #ToInterrupt > 0 then
 		for _, ability in pairs(ToInterrupt) do
-			if spell.name == ability and unit.team ~= player.team and GetDistance(unit) < Erange and Config.esetting.inte then
+			if spell.name == ability and unit.team ~= player.team and GetDistance(unit) < Erange and Config.esetting.inte and Eready then
 				CastE(unit)
 			end
 		end
 	end
-	--[[if unit.type == player.type and unit.team ~= player.team and spell then
+	if unit.type == player.type and unit.team ~= player.team and spell then
 		if gapcloserspell[unit.charName] ~= nil then
 			for i=1, #gapcloserspell[unit.charName] do
 				if spell.name == unit:GetSpellData(gapcloserspell[unit.charName].spell).name then
-					local t = tostring(math.ceil(GetDistance(Vector(spell.endPos), player)))
-					local a = Erange
-					if t < a and Config.esetting.gape then
-						CastE(unit)
+					if spell.endPos ~= nil then
+						local t = tostring(math.ceil(GetDistance(Vector(spell.endPos), player)))
+						local a = Erange
+						if t < a and Config.esetting.gape and Eready then
+							CastE(unit)
+						end
+					end
+					if spell.startPos ~= nil then
+						local t = tostring(math.ceil(GetDistance(Vector(spell.startPos), player)))
+						local a = Erange
+						if t < a and Config.esetting.cans and Eready then
+							CastE(behind(unit))
+						end
 					end
 				end
 			end
 		end
-	end]]
+	end
 end
 
 function OnRemoveBuff(u, b)
