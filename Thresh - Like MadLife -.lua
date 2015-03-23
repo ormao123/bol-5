@@ -8,7 +8,7 @@ end
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Thresh - Like MadLife -:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.01
+local version = 1.02
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Thresh - Like MadLife -.lua".."?rand="..math.random(1,10000)
@@ -54,7 +54,7 @@ function Initiate()
 				DownloadFile(LIBRARY_URL,LIB_PATH..LIBRARY..".lua",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
 			end
 		end
-	end
+	end	
 	if DOWNLOADING_LIBS then return true end
 end
 if Initiate() then return end
@@ -116,7 +116,7 @@ local dp, VP, SxO, STS = nil, nil, nil, nil
 local player = myHero
 local enemyHeroes = GetEnemyHeroes()
 local allyHeroes = GetAllyHeroes()
-local Qrange, Wrange, Erange, Rrange = 1075, 950, 500, 450
+local Qrange, Wrange, Erange, Rrange = 1075, 950, 500, 450 
 local Healrange = 0
 
 local Mikael = 3222
@@ -126,7 +126,7 @@ function LoadItem()
 	ItemNames				= {
 		[3222]				= "Mikael's Crucible",
 	}
-
+	
 	_G.ITEM_1				= 06
 	_G.ITEM_2				= 07
 	_G.ITEM_3				= 08
@@ -134,13 +134,13 @@ function LoadItem()
 	_G.ITEM_5				= 10
 	_G.ITEM_6				= 11
 	_G.ITEM_7				= 12
-
+	
 	___GetInventorySlotItem	= rawget(_G, "GetInventorySlotItem")
 	_G.GetInventorySlotItem	= GetSlotItem
 end
 
 function GetSlotItem(id, unit)
-
+	
 	unit 		= unit or myHero
 
 	if (not ItemNames[id]) then
@@ -148,7 +148,7 @@ function GetSlotItem(id, unit)
 	end
 
 	local name	= ItemNames[id]
-
+	
 	for slot = ITEM_1, ITEM_7 do
 		local item = unit:GetSpellData(slot).name
 		if ((#item > 0) and (item:lower() == name:lower())) then
@@ -190,24 +190,24 @@ function OnLoad()
 			end
         end
     end
-
+	
 	STS 	= SimpleTS()
 	VP 		= VPrediction()
 	dp 		= DivinePred()
-
+	
 	OnLoadMenu()
-
+	
 	healpos = GetSummoner()
 end
 
 function OnTick()
 
 	OnSpellcheck()
-
+	
 	if Config.key.combo then
 		Combo()
 	end
-
+	
 	help()
 end
 
@@ -228,53 +228,53 @@ end
 
 function OnLoadMenu()
 	Config = MenuWrapper("[Your] " .. player.charName, "unique" .. player.charName:gsub("%s+", ""))
-
+	
 		Config:SetTargetSelector(STS)
 		if SxOLoad then
 			Config:SetOrbwalker(SxO)
 		end
 		Config = Config:GetHandle()
-
+		
 		Config:addSubMenu("Key", "key")
 			Config.key:addParam("combo", "Combo Active", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-
+			
 		Config:addSubMenu("Ads", "ads")
 			Config.ads:addParam("pred", "Chooes Pred Type", SCRIPT_PARAM_LIST, 1, {"DivinePred", "VPrediction"})
-
+			
 		Config:addSubMenu("Q Setting", "qsetting")
 			Config.qsetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			--Config.qsetting:addParam("useq22", "Use Q2", SCRIPT_PARAM_ONOFF, true)
-
+			
 		Config:addSubMenu("W Setting", "wsetting")
 			Config.wsetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			Config.wsetting:addParam("help", "Help", SCRIPT_PARAM_ONOFF, true)
 			Config.wsetting:addParam("helparound", "Help W around enemy", SCRIPT_PARAM_SLICE, 1, 1, 5, 0)
 			Config.wsetting:addParam("helprange", "Help W help range", SCRIPT_PARAM_SLICE, 100, 100, 1000, 0)
 			Config.wsetting:addParam("cc", "Help W to cc", SCRIPT_PARAM_ONOFF, true)
-
+		
 		Config:addSubMenu("E Setting", "esetting")
 			Config.esetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			--Config.esetting:addParam("gape", "Use E to Gapcloser", SCRIPT_PARAM_ONOFF, true)
 			Config.esetting:addParam("cans", "Use E to runaway cansle", SCRIPT_PARAM_ONOFF, true)
 			Config.esetting:addParam("inte", "Use E to Interrupt", SCRIPT_PARAM_ONOFF, true)
 			Config.esetting:addParam("pull", "Pull E in Combo", SCRIPT_PARAM_ONOFF, true)
-
+		
 		Config:addSubMenu("R Setting", "rsetting")
 			Config.rsetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			Config.rsetting:addParam("perr", "Use R", SCRIPT_PARAM_SLICE, 1, 1, 5, 0)
-
+			
 		Config:addSubMenu("Item Setting", "isetting")
 			Config.isetting:addParam("use", "Use Item", SCRIPT_PARAM_ONOFF, true)
 			Config.isetting:addSubMenu("Mikael's Crucible", "Mikael")
 				Config.isetting.Mikael:addParam("Mikael", "Mikael's Crucible", SCRIPT_PARAM_ONOFF, true)
 				Config.isetting.Mikael:addParam("Stun", "Use Stun", SCRIPT_PARAM_ONOFF, true)
 				--Config.isetting.Mikael:addParam()
-
+			
 		Config:addSubMenu("Summoner Setting", "ssetting")
 			Config.ssetting:addParam("use", "Use", SCRIPT_PARAM_ONOFF, true)
 			Config.ssetting:addParam("heal", "heal", SCRIPT_PARAM_ONOFF, true)
 			Config.ssetting:addParam("healper", "use heal %", SCRIPT_PARAM_SLICE, 30, 5, 100, 0)
-
+			
 		Config:addSubMenu("Draw", "draw")
 			Config.draw:addParam("qdraw", "Q Draw", SCRIPT_PARAM_ONOFF, true)
 				Config.draw:addParam("qcolor","Q Color", SCRIPT_PARAM_COLOR, {100, 255, 0, 0})
@@ -292,10 +292,10 @@ function Combo()
 		if Qready and GetDistance(target) < Qrange and Config.qsetting.use and not target.dead  then
 			CastQ(target)
 		end
-
+		
 		if Wready and Config.wsetting.use and not target.dead then
 		end
-
+		
 		if Eready and GetDistance(target) < Erange and Config.esetting.use and not target.dead  then
 			if Config.esetting.pull then
 				CastE(behind(target))
@@ -374,7 +374,7 @@ function CastSummoner(typee)
 end
 
 function UseItem(item, target)
-	if player:GetSpellData(item) == READY then
+	if player:GetSpellData(item) == READY and GetDistance(target) < Wrange  then
 		CastSpell(item, target)
 		if Config.wsetting.cc then
 			CastW(target)
