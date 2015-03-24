@@ -99,7 +99,7 @@ Fix OrbWalk
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.25
+local version = 1.26
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -510,7 +510,7 @@ function Farm()
 	if ConfigY.farm.farm then
 		enemyMinions:update()
 		for i, minion in ipairs(enemyMinions.objects) do
-			if Validts.target(minion) and GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero)*0.75 > minion.health and ConfigY.farm.useq then
+			if GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero)*0.75 > minion.health and ConfigY.farm.useq then
 				if ConfigY.pred.choose == 1 then
 					local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(minion, 0.5, 75, 875, 1700, player)
 					if CastPosition and HitChance >= 2 then
