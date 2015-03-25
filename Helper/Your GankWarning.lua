@@ -30,13 +30,12 @@ if AUTO_UPDATE then
 end
 
 function OnLoad()
-	print("Load >> Your GankWarming")
 	OnLoadMenu()
 end
 
 function OnDraw()
 	for i, j in ipairs(GetEnemyHeroes()) do
-		if ValidTarget(j, Config.rance) and Config.champ[j.charName] then
+		if ValidTarget(j, Config.rance) and Config.champ[j.charName] and Config.active then
 			DrawLine3D(myHero.x, myHero.y, myHero.z, j.x,j.y, j.z, 9, 0xffff0000)
 		end
 	end
