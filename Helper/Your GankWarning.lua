@@ -52,5 +52,5 @@ function OnLoadMenu()
 				Config.champ:addParam(j.charName, j.charName.." active", SCRIPT_PARAM_ONOFF, false)
 			end
 			
-		Config:addParam("rance", "Rance", SCRIPT_PARAM_SLICE, 1000, 1000, 2000, 0)
+		Config:addParam("rance", "Rance", SCRIPT_PARAM_SLICE, 1000, 1000, 3000, 0)
 end
