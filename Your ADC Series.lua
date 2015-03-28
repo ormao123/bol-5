@@ -2,6 +2,9 @@
  --[[
   Update Note
 
+  v 1.04
+   Fix TargetSelector
+  
   v 1.03
    Add Corki Htichance in Menu
 
@@ -15,10 +18,7 @@
 
  ]]
 
-
-
-
-local version = 1.04
+ local version = 1.05
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your ADC Series.lua".."?rand="..math.random(1,10000)
@@ -71,12 +71,34 @@ end
 
 if not champions[myHero.charName] then return end
 
-require 'Sourcelib'
-require "VPrediction"
+local SCRIPT_LIBS = {
+	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
+	["VPrediction"] = "https://raw.github.com/LegendBot/Scripts/master/Common/VPrediction.lua",
+	["DivinePred"] = "http://divinetek.rocks/divineprediction/DivinePred.lua"
+}
+function Initiate()
+	for LIBRARY, LIBRARY_URL in pairs(SCRIPT_LIBS) do
+		if FileExist(LIB_PATH..LIBRARY..".lua") then
+			require(LIBRARY)
+		else
+			DOWNLOADING_LIBS = true
+			if LIBRARY == "DivinePred" then
+				AutoupdaterMsg("Missing Library! Downloading "..LIBRARY..". If the library doesn't download, please download it manually.")
+				DownloadFile("http://divinetek.rocks/divineprediction/DivinePred.lua", LIB_PATH.."DivinePred.lua",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
+				DownloadFile("http://divinetek.rocks/divineprediction/DivinePred.luac", LIB_PATH.."DivinePred.luac",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
+			else
+				AutoupdaterMsg("Missing Library! Downloading "..LIBRARY..". If the library doesn't download, please download it manually.")
+				DownloadFile(LIBRARY_URL,LIB_PATH..LIBRARY..".lua",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
+			end
+		end
+	end	
+	if DOWNLOADING_LIBS then return true end
+end
+if Initiate() then return end
 
 
 local champ = champions[myHero.charName]
-local HPred, SxO, STS = nil, nil, nil
+local HPred, SxO, STS, DP = nil, nil, nil, nil
 local ts
 local Config = nil
 local player = myHero
@@ -91,7 +113,7 @@ local AARange = myHero.range+MyminBBox
 
 -- jinx
 
-local JinxQ
+local JinxQ = 0
 local Kalistastack = {}
 
 local cansleingspell = {
@@ -166,6 +188,7 @@ function OnLoad()
 	AutoupdaterMsg(player.charName.." Load")
 	OnOrbLoad()
 	VP = VPrediction()
+	STS = SimpleTS()
 
 	LoadMenu()
 
@@ -269,13 +292,16 @@ function setting()
 		end
 	end
 end
---[[
+
 function OnRemoveBuff(u, b)
 	if player.charName == "Kalista" and  b.name == "kalistaexpungemarker" and u.type == player.type  then
 		Kalistastack[u.charName].stack = 0
 	end
 	if player.charName == "Jinx" and b.name == "jinxqramp" then
 		JinxQ = 0
+	end
+	if player.charName == "Jinx" and buff.name == 'JinxQ' then
+		isFishBones = false
 	end
 end
 
@@ -298,8 +324,11 @@ function OnApplyBuff(s, u, b)
 	if player.charName == "Jinx" and b.name == "jinxqramp" then
 		JinxQ = 1
 	end
+	if player.charName == "Jinx" and buff.name == 'JinxQ' then
+		isFishBones = true
+	end
 end
-]]
+
 function OnTick()
 	if not champLoaded then return end
 
@@ -356,7 +385,13 @@ local function OrbTarget(rance)
 	if RebornLoad then T = _G.AutoCarry.Crosshair.Attack_Crosshair.target end
 	if RevampedLoaded then T = _G.AutoCarry.Orbwalker.target end
 	if SxOLoad then T = SxO:GetTarget() end
-	if T and T.type == player.type and GetDistance(T, player) < rance then return T end
+	if T == nil then 
+		T = STS:GetTarget(rance)
+		return T
+	end
+	if T and T.type == player.type and ValidTarget(T, rance) then
+		return T
+	end
 end
 
 function LoadMenu()
@@ -365,7 +400,8 @@ function LoadMenu()
 		if SxOLoad then
 			Config:SetOrbwalker(SxO)
 		end
-
+		
+		Config:SetTargetSelector(STS)
 		Config = Config:GetHandle()
 
 		if champ.OnCombo then
@@ -432,8 +468,8 @@ function OnSpellcheck()
 end
 
 
-function OnProcessSpell(unit, spell)
-	--[[if #ToInterrupt > 0 then
+--[[function OnProcessSpell(unit, spell)
+	if #ToInterrupt > 0 then
 		for _, ability in pairs(ToInterrupt) do
 			if spell.name == ability and unit.team ~= player.team and GetDistance(unit) < cansleingspell[player.charName].spellrange then
 				if cansleingspell[player.charName] ~= nil then
@@ -456,8 +492,8 @@ function OnProcessSpell(unit, spell)
 				end
 			end
 		end
-	end]]
-end
+	end
+end]]
 
 function GetJungleMob(rance)
 	for _, Mob in pairs(JungleFocusMobs) do
@@ -482,7 +518,6 @@ function GetBestLineFarmPosition(range, width, objects)
 			end
 		 end
 	end
-
 	return BestPos, BestHit
 end
 
@@ -606,6 +641,7 @@ function Corki:__init()
  function Corki:OnCombo()
 	local Target = OrbTarget(1300)
 	if Target ~= nil then
+		print(Vector(Target));
 		if GetDistance(Target, player) < 825 and Qready and Config.combo.useq then
 			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(Target, 0.5, 450, 825, 1125, player)
 			if TargetHitChance >= 2 then
@@ -655,7 +691,7 @@ end
 			end
 		end
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
+			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 75, 1225, 2000, player, true)
 			if HitChance >= 2 then
 				CastSpell(_R, CastPosition.x, CastPosition.z)
 			end
@@ -670,7 +706,7 @@ end
 			end
 		end
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
+			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 75, 1225, 2000, player, true)
 			if HitChance >= 2 then
 				CastSpell(_R, CastPosition.x, CastPosition.z)
 			end
@@ -846,7 +882,7 @@ end
 ---------------------------------------------------------
 ------------------------Jinx
 ---------------------------------------------------------
- --[[
+--[[
 function Jinx:__init()
 
 end
@@ -894,8 +930,8 @@ function Jinx:ApplyMenu()
 		Config.ks:addParam("maxr", "Max Range", SCRIPT_PARAM_SLICE, 1000, 1000, 5000, 0)
 
 end
- ]]
----------------------------------------------------------
+
+-------------------]]--------------------------------------
 ------------------------Ezreal
 ---------------------------------------------------------
 
