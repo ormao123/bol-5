@@ -641,7 +641,6 @@ function Corki:__init()
  function Corki:OnCombo()
 	local Target = OrbTarget(1300)
 	if Target ~= nil then
-		print(Vector(Target));
 		if GetDistance(Target, player) < 825 and Qready and Config.combo.useq then
 			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(Target, 0.5, 450, 825, 1125, player)
 			if TargetHitChance >= 2 then
