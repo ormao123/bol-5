@@ -92,6 +92,9 @@ Add Menu Auto E Off
 v. 1.24
 
 Fix OrbWalk
+
+
+v. 1.27
 ]]
 
 
@@ -99,7 +102,7 @@ Fix OrbWalk
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.26
+local version = 1.27
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -383,7 +386,7 @@ function OnCombo()
 						CastSpell(_W,hitPos.x,hitPos.z)
 					end
 			end
-			if CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana >= (myHero.maxMana*(ConfigY.combo.pere*0.01)) then
+			if CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana >= (myHero.maxMana*(ConfigY.combo.pere*0.01)) and ConfigY.combo.usee then
 				CastSpell(_E)
 			end
 		end
