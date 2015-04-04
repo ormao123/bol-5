@@ -95,6 +95,7 @@ Fix OrbWalk
 
 
 v. 1.27
+v. 1.28
 ]]
 
 
@@ -102,7 +103,7 @@ v. 1.27
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.27
+local version = 1.28
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -325,7 +326,7 @@ function PassiveActive()
 	if ts.target ~= nil and ConfigY.ads.pa then
 		if ConfigY.pred.choose == 1 then
 			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(ts.target, 0.5, 75, 875, 1700, player)
-			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.arget.dead == false then
+			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.target.dead == false then
 				if Qready and ConfigY.combo.useq then
 					CastSpell(_Q, CastPosition.x, CastPosition.z)
 				end
