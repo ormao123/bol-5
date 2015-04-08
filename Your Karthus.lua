@@ -95,7 +95,12 @@ Fix OrbWalk
 
 
 v. 1.27
+
 v. 1.28
+
+v. 1.28
+
+Fix E
 ]]
 
 
@@ -103,7 +108,7 @@ v. 1.28
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.28
+local version = 1.29
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -413,10 +418,6 @@ function OnHarass()
 				end
 			end
 			if ConfigY.harass.usee and CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana >= (myHero.maxMana*(ConfigY.harass.pere*0.01)) then
-				CastSpell(_E)
-			end
-
-			if CountEnemyHeroInRange(eRange) == 0 and EActive and Eready then
 				CastSpell(_E)
 			end
 		end
