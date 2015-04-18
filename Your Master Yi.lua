@@ -6,7 +6,7 @@ local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Master
 
 local Author = "Your"
 
-local Version = 1.00
+local version = 1.00
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Master Yi.lua"
@@ -340,7 +340,7 @@ function LoadMenu()
 				Config.Orbwalker:addParam("INFO2", "SOW Setting", SCRIPT_PARAM_INFO, "")
 			end
 
-		Config:addParam("Version", "Version", SCRIPT_PARAM_INFO, Version)
+		Config:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
 		Config:addParam("Author", "Author", SCRIPT_PARAM_INFO, Author)
 end
 
