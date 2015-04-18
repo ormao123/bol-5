@@ -377,7 +377,7 @@ function OnDraw(  )
 		for i, enemy in pairs(enemyHeroes) do
 			if ValidTarget(enemy) and enemy ~= nil then
 				local barPos = GetHPBarPos(enemy)
-				DrawText(KillTextList[KillText[i]], 18, barPos.x, barPos.y-48, KillTextColor)
+				DrawText(KillTextList[KillText[i]], 18, barPos.x, barPos.y-60, KillTextColor)
 			end
 		end
 	end
@@ -676,7 +676,6 @@ function OnProcessSpell(unit, spell)
 	end]]
 	if unit.isMe then
 		if spell.name:lower():find("attack") then
-			print("Attack!")
 			local target = OrbTarget(Q.Range)
 			if Config.Hotkey.Combo and Config.Combo.UseW then
 				CastW(target)
