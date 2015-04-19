@@ -5,17 +5,18 @@
 	V 1.01		Fix Q Rogic, W Cansle,
 	v 1.02		Fix Bug
 	v 1.03		Fix Updater
+	v 1.04		Optimization, Add CastItem (Youmu, Blade of the Ruined King)
 
 ]]
 
 if myHero.charName ~= "MasterYi" then return end
 
 local Author = "Your"
-local version = "1.03"
+local version = "1.04"
 
 local SCRIPT_INFO = {
 	["Name"] = "Your Master Yi",
-	["Version"] = 1.03,
+	["Version"] = 1.04,
 	["Author"] = {
 		["Your"] = "http://forum.botoflegends.com/user/145247-"
 	},
@@ -71,14 +72,16 @@ local wDmg = 0
 local eDmg = 0
 
 
+
 local JungleMobs = {}
 local JungleFocusMobs = {}
 	
 	
 local EvadingSpell =
 {
-	["Jax"]			= {"CounterStrike"},
+	--["Jax"]			= {"CounterStrike"},
 	["Teemo"]		= {"BlindingDart"},
+	["Jad"] = {""},
 }
 
 local KillText = {}
@@ -131,12 +134,16 @@ end
 
 local function OrbReset()
 	if MMALoaded then
+		--print("ReSet")
 		_G.MMA_ResetAutoAttack()
 	elseif RebornLoaded then
+		--print("ReSet")
 		_G.AutoCarry.MyHero:AttacksEnabled(true)
 	elseif SxOLoaded then
+		--print("ReSet")
 		SxO:ResetAA()
 	elseif SOWLoaded then
+		--print("ReSet")
 		SOW:resetAA()
 	end
 end
@@ -234,17 +241,7 @@ function Setting()
 			["TT_NWolf26.1.3"]			= true
 		}
 	end
-
-	for i = 0, objManager.maxObjects do
-		local object = objManager:getObject(i)
-		if object and object.valid and not object.dead then
-			if FocusJungleNames[object.name] then
-				JungleFocusMobs[#JungleFocusMobs+1] = object
-			elseif JungleMobNames[object.name] then
-				JungleMobs[#JungleMobs+1] = object
-			end
-		end
-	end
+	_JungleMobs = minionManager(MINION_JUNGLE, Q.Range, myHero, MINION_SORT_MAXHEALTH_DEC)
 end
 
 function GetJungleMob(rance)
@@ -264,11 +261,29 @@ function OnLoad()
 	STS = SimpleTS()
 	OrbLoad()
 	LoadMenu()
+	Setting()
+	
  	if GetGame().map.shortName == "twistedTreeline" then
 		TwistedTreeline = true
 	else
 		TwistedTreeline = false
 	end
+	
+	Items =
+	{
+		["Hydra"] = {Id = 3074,Range = defaultRange,Slot = nil, IsReady = function() if Items["Hydra"].Slot ~= nil then return myHero:CanUseSpell(Items["Hydra"].Slot) else return false end end,},
+		["Tiamat"] = {Id = 3077,Range = defaultRange,Slot = nil, IsReady = function() if Items["Tiamat"].Slot ~= nil then return myHero:CanUseSpell(Items["Tiamat"].Slot) else return false end end,},
+		["Youmu"] = {Id = 3142,Range = defaultRange,Slot = nil, IsReady = function() if Items["Youmu"].Slot ~= nil then return myHero:CanUseSpell(Items["Youmu"].Slot) else return false end end,},
+		["BRK"]   = {Id = 3153,Range = 450,Slot = nil, IsReady = function() if Items["BRK"].Slot ~= nil then return myHero:CanUseSpell(Items["BRK"].Slot) else return false end end,},
+	}
+	
+end
+
+function _GetSummonerSlot(spellName, unit)
+    unit = unit or player
+    if unit:GetSpellData(SUMMONER_1).name:lower():find(spellName) then return SUMMONER_1 end
+    if unit:GetSpellData(SUMMONER_2).name:lower():find(spellName) then return SUMMONER_2 end
+	return nil
 end
 
 
@@ -304,6 +319,8 @@ function LoadMenu()
 		
 		Config:addSubMenu("Evade", "Evade")
 			Config.Evade:addParam("Evade", "Evade With Evadeee", SCRIPT_PARAM_ONOFF, true)
+			
+		Config:addSubMenu("Summoner", "Summoner")
 			
 
 		Config:addSubMenu("QSetting", "QSetting")
@@ -357,12 +374,17 @@ end
 function OnTick(  )
 	if player.dead then return end
 	
+	
 	DamageCalculation()
 	if Config.Hotkey.Combo then OnCombo() end
 	if Config.Hotkey.Harass then OnHarass() end
 	if Config.Hotkey.Clear then OnClear() end
 	if Config.KillSteal.Enable then KillSteal() end
 	if Config.Evade.Evade then Evade() end
+	
+	for _, item in pairs(Items) do
+		item.Slot = GetInventorySlotItem(item.Id)
+	end
 end
 
 function OnDraw(  )
@@ -403,9 +425,11 @@ end
 function OnCombo()
 	local target = OrbTarget(Q.Range)
 	if ValidTarget(target) then
-		if Config.Combo.UseQ and GetDistance(target, player) >= W.Range  then CastQ(target) end
-		if Config.Combo.UseE then CastE(target) end
-		if Config.Combo.UseR then CastR(target) end
+		if Items["Youmu"].IsReady() then CastItem(target, "Youmu", 1000) end
+		if Items["BRK"].IsReady() then CastBRK(target) end
+		if Config.Combo.UseQ and Q.IsReady() and GetDistance(target, player) >= W.Range  then CastQ(target) end
+		if Config.Combo.UseE and E.IsReady() then CastE(target) end
+		if Config.Combo.UseR and R.IsReady() then CastR(target) end
 	end
 end
 
@@ -413,23 +437,27 @@ end
 function OnHarass()
 	local target = OrbTarget(Q.Range)
 	if ValidTarget(target) then
-		if Config.Harass.UseQ then CastQ(target) end
-		if Config.Harass.UseE then CastE(target) end
+		if Config.Harass.UseQ and Q.IsReady() then CastQ(target) end
+		if Config.Harass.UseE and E.IsReady() then CastE(target) end
 	end
 end
 
 function OnClear(  )
-	Setting()
-	local Mob = GetJungleMob(Q.Range)
-	if Mob ~= nil then
-		if Config.Clear.UseQ then CastQ(Mob) end
-		if Config.Clear.UseE then CastE(Mob) end
-	else
-		enemyMinions:update()
-		for i, minion in pairs(enemyMinions.objects) do
+	_JungleMobs:update()
+	for i, minion in pairs(_JungleMobs.objects) do
+		if minion ~= nil then
 			if ValidTarget(minion) and not minion.dead then
-				if Config.Clear.UseQ then CastQ(minion) end
-				if Config.Clear.UseE then CastE(minion) end
+				if Config.Clear.UseQ and Q.IsReady() then CastQ(minion) end
+				if Config.Clear.UseE and E.IsReady() then CastE(minion) end
+			end
+		end
+	end
+	enemyMinions:update()
+	for i, minion in pairs(enemyMinions.objects) do
+		if minion ~= nil then
+			if ValidTarget(minion) and not minion.dead then
+				if Config.Clear.UseQ and Q.IsReady() then CastQ(minion) end
+				if Config.Clear.UseE and E.IsReady() then CastE(minion) end
 			end
 		end
 	end
@@ -573,7 +601,28 @@ function CastR( target )
 	end
 end
 
-function ItemCansle(  )
+function CastBRK( target )
+	if target.dead then return end
+	if not OrbwalkCanMove() then return end
+	if GetDistance(target, player) <= Items["BRK"].Range and target ~= nil then
+		if VIP_USER then
+			Packet("S_CAST", {spellId = Items["BRK"].Slot, targetNetworkId = target.networkID}):send()
+		else
+			CastSpell(Items["BRK"].Slot, target)
+		end
+	end
+end
+
+function CastItem( target , item , range)
+	if not OrbwalkCanMove() then return end
+	if GetDistance(target, player) <= range then return end
+	if target ~= nil then
+		if VIP_USER then
+			Packet("S_CAST", {spellId = Items[item].Slot}):send()
+		else
+			CastSpell(Items[item].Slot, target)
+		end
+	end
 end
 
 
@@ -687,11 +736,25 @@ function OnProcessSpell(unit, spell)
 	if unit.isMe then
 		if spell.name:lower():find("attack") then
 			local target = OrbTarget(Q.Range)
-			if Config.Hotkey.Combo and Config.Combo.UseW then
-				CastW(target)
-			end
-			if Config.Hotkey.Harass and Config.Harass.UseW then
-				CastW(target)
+			if not W.IsReady then
+				if Config.Hotkey.Combo and Config.Combo.UseW then
+					DelayAction( function() CastW(target) end,0.3)
+				end
+				if Config.Hotkey.Harass and Config.Harass.UseW then
+					DelayAction( function() CastW(target) end,0.3)
+				end
+			--[[else
+				if Config.Hotkey.Combo or Config.Hotkey.Harass or Config.Hotkey.Clear then
+					if Items["BRK"].IsReady() then
+						DelayAction(function() CastBRK(target) end,0.3)
+					elseif Items["Hydra"].IsReady() then
+						DelayAction( function() CastItem( target , "Hydra" , 1000 ) end,0.3)
+						OrbReset()
+					elseif Items["Tiamat"].IsReady() then
+						DelayAction(function() CastItem( target , "Tiamat" , 1000 )end,0.3)
+						OrbReset()
+					end
+				end]]
 			end
 		end
 	end
