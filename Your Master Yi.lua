@@ -4,52 +4,56 @@
 	v 1.0		Release
 	V 1.01		Fix Q Rogic, W Cansle,
 	v 1.02		Fix Bug
+	v 1.03		Fix Updater
 
 ]]
 
-
-
-
-
-
-
-
-
-
-
 if myHero.charName ~= "MasterYi" then return end
 
-require "SourceLib"
-local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Master Yi:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
-
-
 local Author = "Your"
+local version = "1.03"
 
-local version = "1.02"
-local AUTO_UPDATE = true
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/jineyne/bol/master/Your Master Yi.lua"
-local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+local SCRIPT_INFO = {
+	["Name"] = "Your Master Yi",
+	["Version"] = 1.03,
+	["Author"] = {
+		["Your"] = "http://forum.botoflegends.com/user/145247-"
+	},
+}
+local SCRIPT_UPDATER = {
+	["Activate"] = true,
+	["Script"] = SCRIPT_PATH..GetCurrentEnv().FILE_NAME,
+	["URL_HOST"] = "raw.github.com",
+	["URL_PATH"] = "/jineyne/bol/master/Your Master Yi.lua",
+	["URL_VERSION"] = "/jineyne/bol/master/version/Your Master Yi.version"
+}
+local SCRIPT_LIBS = {
+	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
+}
 
-if AUTO_UPDATE then
-	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/version/Your Master Yi.version")
-	if ServerData then
-		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
-		if ServerVersion then
-			if tonumber(version) < ServerVersion then
-				AutoupdaterMsg("New version available"..ServerVersion)
-				AutoupdaterMsg("Updating, please don't press F9")
-				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
+function PrintMessage(message) 
+	print("<font color=\"#00A300\"><b>"..SCRIPT_INFO["Name"]..":</b></font> <font color=\"#FFFFFF\">"..message.."</font>")
+end
+--{ Initiate Script (Checks for updates)
+	function Initiate()
+		for LIBRARY, LIBRARY_URL in pairs(SCRIPT_LIBS) do
+			if FileExist(LIB_PATH..LIBRARY..".lua") then
+				require(LIBRARY)
 			else
-				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+				DOWNLOADING_LIBS = true
+				PrintMessage("Missing Library! Downloading "..LIBRARY..". If the library doesn't download, please download it manually.")
+				DownloadFile(LIBRARY_URL,LIB_PATH..LIBRARY..".lua",function() PrintMessage("Successfully downloaded "..LIBRARY) end)
 			end
 		end
-	else
-		AutoupdaterMsg("Error downloading version info")
+		if DOWNLOADING_LIBS then return true end
+		if SCRIPT_UPDATER["Activate"] then
+			SourceUpdater("<font color=\"#00A300\">"..SCRIPT_INFO["Name"].."</font>", SCRIPT_INFO["Version"], SCRIPT_UPDATER["URL_HOST"], SCRIPT_UPDATER["URL_PATH"], SCRIPT_UPDATER["Script"], SCRIPT_UPDATER["URL_VERSION"]):CheckUpdate()
+		end
 	end
-end
+	if Initiate() then return end
 
 local Ignite = nil
+local Smite = nil
 
 local defaultRange = myHero.range + GetDistance(myHero.minBBox)
 local enemyHeroes = GetEnemyHeroes()
@@ -69,8 +73,8 @@ local eDmg = 0
 
 local JungleMobs = {}
 local JungleFocusMobs = {}
-
-
+	
+	
 local EvadingSpell =
 {
 	["Jax"]			= {"CounterStrike"},
@@ -80,11 +84,11 @@ local EvadingSpell =
 local KillText = {}
 local KillTextColor = ARGB(250, 255, 38, 1)
 local KillTextList =
- {
+ {		
 	"Harass your enemy!", 					-- 01
 	"Wait for your CD's!",					-- 02
 	"Kill! - Ignite",						-- 03
-	"Kill! - (Q)",							-- 04
+	"Kill! - (Q)",							-- 04 
 	"Kill! - (W)",							-- 05
 	"Kill! - (E)",							-- 06
 	"Kill! - (Q)+(W)",						-- 07
@@ -98,14 +102,14 @@ local MMALoaded, RebornLoaded, RevampedLoaded, SxOLoaded, SACLoaded = nil, nil, 
 local function OrbLoad()
 	if _G.MMA_Loaded then
 		MMALoaded = true
-		AutoupdaterMsg("Found MMA")
+		PrintMessage("Found MMA")
 	elseif _G.AutoCarry then
 		if _G.AutoCarry.Helper then
 			RebornLoaded = true
-			AutoupdaterMsg("Found SAC: Reborn")
+			PrintMessage("Found SAC: Reborn")
 		else
 			RevampedLoaded = true
-			AutoupdaterMsg("Found SAC: Revamped")
+			PrintMessage("Found SAC: Revamped")
 		end
 	elseif _G.Reborn_Loaded then
 		SACLoaded = true
@@ -114,14 +118,14 @@ local function OrbLoad()
 		require 'SxOrbWalk'
 		SxO = SxOrbWalk()
 		SxOLoaded = true
-		AutoupdaterMsg("Loaded SxO")
+		PrintMessage("Loaded SxO")
 	elseif FileExist(LIB_PATH .. "SOW.lua") then
 		require 'SOW'
 		SOW = SOW(VP)
 		SOWLoaded = true
 		ScriptMsg("Loaded SOW")
 	else
-		AutoupdaterMsg("Cant Fine OrbWalker")
+		PrintMessage("Cant Fine OrbWalker")
 	end
 end
 
@@ -156,7 +160,7 @@ local function OrbTarget(rance)
 	if RevampedLoaded then T = _G.AutoCarry.Orbwalker.target end
 	if SxOLoad then T = SxO:GetTarget() end
 	if SOWLoaded then T = SOW:GetTarget() end
-	if T == nil then
+	if T == nil then 
 		T = STS:GetTarget(rance)
 	end
 	if T and T.type == player.type and ValidTarget(T, rance) then
@@ -165,9 +169,6 @@ local function OrbTarget(rance)
 end
 
 function Setting()
-
-
-
 	if not TwistedTreeline then
 		JungleMobNames = {
 			["SRU_MurkwolfMini2.1.3"]	= true,
@@ -262,11 +263,7 @@ end
 function OnLoad()
 	STS = SimpleTS()
 	OrbLoad()
-	local Ignite = GetSummonerSlot("Ignite", player)
-	if Ignite ~= nil then AutoupdaterMsg("Ignite Manager On") end
-
 	LoadMenu()
-
  	if GetGame().map.shortName == "twistedTreeline" then
 		TwistedTreeline = true
 	else
@@ -303,20 +300,11 @@ function LoadMenu()
 		Config:addSubMenu("KillSteal", "KillSteal")
 			Config.KillSteal:addParam("Enable", "Enable", SCRIPT_PARAM_ONOFF, true)
 			Config.KillSteal:addParam("UseQ", "UseQ", SCRIPT_PARAM_ONOFF, true)
-
-		if Ignite ~= nil then
-			Config:addSubMenu("Summoner", "Summoner")
-				Config.Summoner:addParam("Ignite", "Ignite", SCRIPT_PARAM_ONOFF, true)
-		end
-
+	
+		
 		Config:addSubMenu("Evade", "Evade")
 			Config.Evade:addParam("Evade", "Evade With Evadeee", SCRIPT_PARAM_ONOFF, true)
-			for i, enemy in pairs(enemyHeroes) do
-				if EvadingSpell[enemy] ~= nil then
-					Config.Evade:addParam(EvadingSpell[enemy][0], "Evade "..EvadingSpell[enemy][0], SCRIPT_PARAM_ONOFF, true)
-				end
-			end
-
+			
 
 		Config:addSubMenu("QSetting", "QSetting")
 			Config.QSetting:addParam("Packet", "Packet Cast Only VIP", SCRIPT_PARAM_ONOFF, true)
@@ -368,7 +356,7 @@ end
 
 function OnTick(  )
 	if player.dead then return end
-
+	
 	DamageCalculation()
 	if Config.Hotkey.Combo then OnCombo() end
 	if Config.Hotkey.Harass then OnHarass() end
@@ -454,9 +442,9 @@ function KillSteal(  )
 		local hp = enemy.health
 			if hp <= qDmg and Q.IsReady() and (distance <= Q.Range)
 				then CastQ(enemy)
-			elseif hp <= wDmg and W.IsReady() and (distance <= W.Range)
+			elseif hp <= wDmg and W.IsReady() and (distance <= W.Range) 
 				then CastW(enemy)
-			elseif hp <= eDmg and E.IsReady() and (distance <= E.Range)
+			elseif hp <= eDmg and E.IsReady() and (distance <= E.Range) 
 				then CastE(enemy)
 			elseif hp <= (qDmg + wDmg) and Q.IsReady() and W.IsReady() and (distance <= Q.Range)
 				then CastW(enemy)
@@ -535,19 +523,19 @@ function CastW( target )
 		if VIP_USER then
 			if Config.QSetting.Packet then
 				Packet("S_CAST", {spellId = _W}):send()
-				if Config.WSetting.Cansle then
-					OrbReset()
+				if Config.WSetting.Cansle then 
+					OrbReset() 
 				end
 			else
 				CastSpell(_W, target)
-				if Config.WSetting.Cansle then
-					OrbReset()
+				if Config.WSetting.Cansle then 
+					OrbReset() 
 				end
 			end
 		else
 			CastSpell(_W, target)
-			if Config.WSetting.Cansle then
-				OrbReset()
+			if Config.WSetting.Cansle then 
+				OrbReset() 
 			end
 		end
 	end
@@ -586,7 +574,6 @@ function CastR( target )
 end
 
 function ItemCansle(  )
-
 end
 
 
@@ -594,28 +581,21 @@ end
 --- Athor Functions -------------------------------------------------
 ---------------------------------------------------------------------
 
-function GetSummonerSlot(name, unit)
-    unit = unit or player
-    if unit:GetSpellData(SUMMONER_1).name == name then return SUMMONER_1 end
-    if unit:GetSpellData(SUMMONER_2).name == name then return SUMMONER_2 end
-    return nil
-end
-
 
 ---------------------------------------------------------------------
---- Function Damage Calculations for Skills/Items/Enemys ---
+--- Function Damage Calculations for Skills/Items/Enemys --- 
 ---------------------------------------------------------------------
 
 function DamageCalculation()
 	for i, enemy in pairs(enemyHeroes) do
 		if ValidTarget(enemy) and enemy ~= nil then
 			aaDmg 		= getDmg("AD", enemy, myHero)
-			qDmg 		= ((getDmg("Q", enemy, myHero)) or 0)
-			wDmg		= ((getDmg("W", enemy, myHero)) or 0)
+			qDmg 		= ((getDmg("Q", enemy, myHero)) or 0)	
+			wDmg		= ((getDmg("W", enemy, myHero)) or 0)	
 			eDmg		= ((getDmg("E", enemy, myHero)) or 0)
 			--iDmg 		= ((Ignite and getDmg("IGNITE", enemy, myHero)) or 0)	-- Ignite
 			local abilityDmg = qDmg + wDmg + eDmg
-			-- Set Kill Text --
+			-- Set Kill Text --	
 			-- "Kill! - Ignite" --
 			--[[if enemy.health <= iDmgthen
 					 if IREADY then KillText[i] = 3
@@ -658,8 +638,8 @@ function DamageCalculation()
 				if Q.IsReady() and W.IsReady() and E.IsReady() then KillText[i] = 10
 					else KillText[i] = 2
 				end
-			-- "Harass your enemy!" --
-			else KillText[i] = 1
+			-- "Harass your enemy!" -- 
+			else KillText[i] = 1				
 			end
 		end
 end
