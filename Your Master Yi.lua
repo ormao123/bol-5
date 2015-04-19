@@ -1,8 +1,10 @@
 --[[
-        [[Your Master Yi]]
+        Your Master Yi
 
 	v 1.0		Release
 	V 1.01		Fix Q Rogic, W Cansle,
+	v 1.02		Fix Bug
+
 ]]
 
 
@@ -23,7 +25,7 @@ local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Master
 
 local Author = "Your"
 
-local version = "1.01"
+local version = "1.02"
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Master Yi.lua"
@@ -67,8 +69,8 @@ local eDmg = 0
 
 local JungleMobs = {}
 local JungleFocusMobs = {}
-	
-	
+
+
 local EvadingSpell =
 {
 	["Jax"]			= {"CounterStrike"},
@@ -78,11 +80,11 @@ local EvadingSpell =
 local KillText = {}
 local KillTextColor = ARGB(250, 255, 38, 1)
 local KillTextList =
- {		
+ {
 	"Harass your enemy!", 					-- 01
 	"Wait for your CD's!",					-- 02
 	"Kill! - Ignite",						-- 03
-	"Kill! - (Q)",							-- 04 
+	"Kill! - (Q)",							-- 04
 	"Kill! - (W)",							-- 05
 	"Kill! - (E)",							-- 06
 	"Kill! - (Q)+(W)",						-- 07
@@ -154,7 +156,7 @@ local function OrbTarget(rance)
 	if RevampedLoaded then T = _G.AutoCarry.Orbwalker.target end
 	if SxOLoad then T = SxO:GetTarget() end
 	if SOWLoaded then T = SOW:GetTarget() end
-	if T == nil then 
+	if T == nil then
 		T = STS:GetTarget(rance)
 	end
 	if T and T.type == player.type and ValidTarget(T, rance) then
@@ -164,7 +166,7 @@ end
 
 function Setting()
 
-	
+
 
 	if not TwistedTreeline then
 		JungleMobNames = {
@@ -264,7 +266,7 @@ function OnLoad()
 	if Ignite ~= nil then AutoupdaterMsg("Ignite Manager On") end
 
 	LoadMenu()
-  
+
  	if GetGame().map.shortName == "twistedTreeline" then
 		TwistedTreeline = true
 	else
@@ -306,7 +308,7 @@ function LoadMenu()
 			Config:addSubMenu("Summoner", "Summoner")
 				Config.Summoner:addParam("Ignite", "Ignite", SCRIPT_PARAM_ONOFF, true)
 		end
-		
+
 		Config:addSubMenu("Evade", "Evade")
 			Config.Evade:addParam("Evade", "Evade With Evadeee", SCRIPT_PARAM_ONOFF, true)
 			for i, enemy in pairs(enemyHeroes) do
@@ -314,7 +316,7 @@ function LoadMenu()
 					Config.Evade:addParam(EvadingSpell[enemy][0], "Evade "..EvadingSpell[enemy][0], SCRIPT_PARAM_ONOFF, true)
 				end
 			end
-			
+
 
 		Config:addSubMenu("QSetting", "QSetting")
 			Config.QSetting:addParam("Packet", "Packet Cast Only VIP", SCRIPT_PARAM_ONOFF, true)
@@ -366,7 +368,7 @@ end
 
 function OnTick(  )
 	if player.dead then return end
-	
+
 	DamageCalculation()
 	if Config.Hotkey.Combo then OnCombo() end
 	if Config.Hotkey.Harass then OnHarass() end
@@ -452,9 +454,9 @@ function KillSteal(  )
 		local hp = enemy.health
 			if hp <= qDmg and Q.IsReady() and (distance <= Q.Range)
 				then CastQ(enemy)
-			elseif hp <= wDmg and W.IsReady() and (distance <= W.Range) 
+			elseif hp <= wDmg and W.IsReady() and (distance <= W.Range)
 				then CastW(enemy)
-			elseif hp <= eDmg and E.IsReady() and (distance <= E.Range) 
+			elseif hp <= eDmg and E.IsReady() and (distance <= E.Range)
 				then CastE(enemy)
 			elseif hp <= (qDmg + wDmg) and Q.IsReady() and W.IsReady() and (distance <= Q.Range)
 				then CastW(enemy)
@@ -533,19 +535,19 @@ function CastW( target )
 		if VIP_USER then
 			if Config.QSetting.Packet then
 				Packet("S_CAST", {spellId = _W}):send()
-				if Config.WSetting.Cansle then 
-					OrbReset() 
+				if Config.WSetting.Cansle then
+					OrbReset()
 				end
 			else
 				CastSpell(_W, target)
-				if Config.WSetting.Cansle then 
-					OrbReset() 
+				if Config.WSetting.Cansle then
+					OrbReset()
 				end
 			end
 		else
 			CastSpell(_W, target)
-			if Config.WSetting.Cansle then 
-				OrbReset() 
+			if Config.WSetting.Cansle then
+				OrbReset()
 			end
 		end
 	end
@@ -584,7 +586,7 @@ function CastR( target )
 end
 
 function ItemCansle(  )
-	
+
 end
 
 
@@ -601,19 +603,19 @@ end
 
 
 ---------------------------------------------------------------------
---- Function Damage Calculations for Skills/Items/Enemys --- 
+--- Function Damage Calculations for Skills/Items/Enemys ---
 ---------------------------------------------------------------------
 
 function DamageCalculation()
 	for i, enemy in pairs(enemyHeroes) do
 		if ValidTarget(enemy) and enemy ~= nil then
 			aaDmg 		= getDmg("AD", enemy, myHero)
-			qDmg 		= ((getDmg("Q", enemy, myHero)) or 0)	
-			wDmg		= ((getDmg("W", enemy, myHero)) or 0)	
+			qDmg 		= ((getDmg("Q", enemy, myHero)) or 0)
+			wDmg		= ((getDmg("W", enemy, myHero)) or 0)
 			eDmg		= ((getDmg("E", enemy, myHero)) or 0)
 			--iDmg 		= ((Ignite and getDmg("IGNITE", enemy, myHero)) or 0)	-- Ignite
 			local abilityDmg = qDmg + wDmg + eDmg
-			-- Set Kill Text --	
+			-- Set Kill Text --
 			-- "Kill! - Ignite" --
 			--[[if enemy.health <= iDmgthen
 					 if IREADY then KillText[i] = 3
@@ -656,8 +658,8 @@ function DamageCalculation()
 				if Q.IsReady() and W.IsReady() and E.IsReady() then KillText[i] = 10
 					else KillText[i] = 2
 				end
-			-- "Harass your enemy!" -- 
-			else KillText[i] = 1				
+			-- "Harass your enemy!" --
+			else KillText[i] = 1
 			end
 		end
 end
