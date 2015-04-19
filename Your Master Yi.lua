@@ -1,3 +1,20 @@
+--[[
+        [[Your Master Yi]]
+
+	v 1.0		Release
+	V 1.01		Fix Q Rogic, W Cansle,
+]]
+
+
+
+
+
+
+
+
+
+
+
 if myHero.charName ~= "MasterYi" then return end
 
 require "SourceLib"
@@ -6,7 +23,7 @@ local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Master
 
 local Author = "Your"
 
-local version = 1.00
+local version = "1.01"
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Master Yi.lua"
@@ -57,6 +74,7 @@ local EvadingSpell =
 	["Jax"]			= {"CounterStrike"},
 	["Teemo"]		= {"BlindingDart"},
 }
+
 local KillText = {}
 local KillTextColor = ARGB(250, 255, 38, 1)
 local KillTextList =
@@ -290,7 +308,7 @@ function LoadMenu()
 		end
 		
 		Config:addSubMenu("Evade", "Evade")
-			Config.Evade:addParam("Evade", "Evade With Evade", SCRIPT_PARAM_ONOFF, true)
+			Config.Evade:addParam("Evade", "Evade With Evadeee", SCRIPT_PARAM_ONOFF, true)
 			for i, enemy in pairs(enemyHeroes) do
 				if EvadingSpell[enemy] ~= nil then
 					Config.Evade:addParam(EvadingSpell[enemy][0], "Evade "..EvadingSpell[enemy][0], SCRIPT_PARAM_ONOFF, true)
@@ -300,6 +318,7 @@ function LoadMenu()
 
 		Config:addSubMenu("QSetting", "QSetting")
 			Config.QSetting:addParam("Packet", "Packet Cast Only VIP", SCRIPT_PARAM_ONOFF, true)
+			--Config.QSetting:addParam("Magnet", "Magnet", SCRIPT_PARAM_ONOFF, true)
 
 		Config:addSubMenu("WSetting", "WSetting")
 			Config.WSetting:addParam("Cansle", "Attack Cansle", SCRIPT_PARAM_ONOFF, true)
@@ -340,6 +359,7 @@ function LoadMenu()
 				Config.Orbwalker:addParam("INFO2", "SOW Setting", SCRIPT_PARAM_INFO, "")
 			end
 
+		Config:addParam("INFO", "", SCRIPT_PARAM_INFO, "")
 		Config:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
 		Config:addParam("Author", "Author", SCRIPT_PARAM_INFO, Author)
 end
@@ -393,7 +413,7 @@ end
 function OnCombo()
 	local target = OrbTarget(Q.Range)
 	if ValidTarget(target) then
-		if Config.Combo.UseQ then CastQ(target) end
+		if Config.Combo.UseQ and GetDistance(target, player) >= W.Range  then CastQ(target) end
 		if Config.Combo.UseE then CastE(target) end
 		if Config.Combo.UseR then CastR(target) end
 	end
@@ -513,13 +533,21 @@ function CastW( target )
 		if VIP_USER then
 			if Config.QSetting.Packet then
 				Packet("S_CAST", {spellId = _W}):send()
+				if Config.WSetting.Cansle then 
+					OrbReset() 
+				end
 			else
 				CastSpell(_W, target)
+				if Config.WSetting.Cansle then 
+					OrbReset() 
+				end
 			end
 		else
 			CastSpell(_W, target)
+			if Config.WSetting.Cansle then 
+				OrbReset() 
+			end
 		end
-		if Config.WSetting.Cansle then OrbReset() end
 	end
 end
 
