@@ -1,48 +1,65 @@
 
  --[[
   Update Note
-
-  v 1.04
-   Fix TargetSelector
   
-  v 1.03
-   Add Corki Htichance in Menu
+  v 1.06	Optimization
+			Fix LineClear
+			Fix Bug
+			Fix Updater
 
-  v 1.02
-   Add Tristana
-   Add Anti Gapcloser
-   Add Anti Spell
-
-  v 1.01
-   Add Kog'Maw
+  v 1.05	Fix Bug
+  
+  v 1.04 	Fix TargetSelector
+  
+  v 1.03 	Add Corki Htichance in Menu
+  
+  v 1.02	Add Tristana
+			Add Anti Gapcloser
+			Add Anti Spell
+			
+  v 1.01	Add Kog'Maw
 
  ]]
 
- local version = 1.05
-local AUTO_UPDATE = true
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/jineyne/bol/master/Your ADC Series.lua".."?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = SCRIPT_PATH.."Your ADC Series.lua"
-local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+local SCRIPT_INFO = {
+	["Name"] = "Your ADC Series",
+	["Version"] = 1.06,
+	["Author"] = {
+		["Your"] = "http://forum.botoflegends.com/user/145247-"
+	},
+}
+local SCRIPT_UPDATER = {
+	["Activate"] = true,
+	["Script"] = SCRIPT_PATH..GetCurrentEnv().FILE_NAME,
+	["URL_HOST"] = "raw.github.com",
+	["URL_PATH"] = "/jineyne/bol/master/Your ADC Series.lua",
+	["URL_VERSION"] = "/jineyne/bol/master/version/Your ADC Series.version"
+}
+local SCRIPT_LIBS = {
+	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
+	["VPrediction"] = "https://raw.github.com/LegendBot/Scripts/master/Common/VPrediction.lua",
+}
 
-local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your ADC Series:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
-if AUTO_UPDATE then
-	local ServerData = GetWebResult(UPDATE_HOST, "/jineyne/bol/master/version/Your ADC Series.version")
-	if ServerData then
-		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
-		if ServerVersion then
-			if tonumber(version) < ServerVersion then
-				AutoupdaterMsg("New version available"..ServerVersion)
-				AutoupdaterMsg("Updating, please don't press F9")
-				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
-			else
-				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
-			end
+function PrintMessage(message) 
+	print("<font color=\"#00A300\"><b>"..SCRIPT_INFO["Name"]..":</b></font> <font color=\"#FFFFFF\">"..message.."</font>")
+end
+--{ Initiate Script (Checks for updates)
+function Initiate()
+	for LIBRARY, LIBRARY_URL in pairs(SCRIPT_LIBS) do
+		if FileExist(LIB_PATH..LIBRARY..".lua") then
+			require(LIBRARY)
+		else
+			DOWNLOADING_LIBS = true
+			PrintMessage("Missing Library! Downloading "..LIBRARY..". If the library doesn't download, please download it manually.")
+			DownloadFile(LIBRARY_URL,LIB_PATH..LIBRARY..".lua",function() PrintMessage("Successfully downloaded "..LIBRARY) end)
 		end
-	else
-		AutoupdaterMsg("Error downloading version info")
+	end
+	if DOWNLOADING_LIBS then return true end
+	if SCRIPT_UPDATER["Activate"] then
+		SourceUpdater("<font color=\"#00A300\">"..SCRIPT_INFO["Name"].."</font>", SCRIPT_INFO["Version"], SCRIPT_UPDATER["URL_HOST"], SCRIPT_UPDATER["URL_PATH"], SCRIPT_UPDATER["Script"], SCRIPT_UPDATER["URL_VERSION"]):CheckUpdate()
 	end
 end
+if Initiate() then return end
 
 local champions = {
 	["Graves"]		= true,
@@ -71,31 +88,6 @@ end
 
 if not champions[myHero.charName] then return end
 
-local SCRIPT_LIBS = {
-	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
-	["VPrediction"] = "https://raw.github.com/LegendBot/Scripts/master/Common/VPrediction.lua",
-	["DivinePred"] = "http://divinetek.rocks/divineprediction/DivinePred.lua"
-}
-function Initiate()
-	for LIBRARY, LIBRARY_URL in pairs(SCRIPT_LIBS) do
-		if FileExist(LIB_PATH..LIBRARY..".lua") then
-			require(LIBRARY)
-		else
-			DOWNLOADING_LIBS = true
-			if LIBRARY == "DivinePred" then
-				AutoupdaterMsg("Missing Library! Downloading "..LIBRARY..". If the library doesn't download, please download it manually.")
-				DownloadFile("http://divinetek.rocks/divineprediction/DivinePred.lua", LIB_PATH.."DivinePred.lua",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
-				DownloadFile("http://divinetek.rocks/divineprediction/DivinePred.luac", LIB_PATH.."DivinePred.luac",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
-			else
-				AutoupdaterMsg("Missing Library! Downloading "..LIBRARY..". If the library doesn't download, please download it manually.")
-				DownloadFile(LIBRARY_URL,LIB_PATH..LIBRARY..".lua",function() AutoupdaterMsg("Successfully downloaded "..LIBRARY) end)
-			end
-		end
-	end	
-	if DOWNLOADING_LIBS then return true end
-end
-if Initiate() then return end
-
 
 local champ = champions[myHero.charName]
 local HPred, SxO, STS, DP = nil, nil, nil, nil
@@ -104,9 +96,8 @@ local Config = nil
 local player = myHero
 local enemyHeroes = GetEnemyHeroes()
 local EnemyMinions = minionManager(MINION_ENEMY, 1500, player, MINION_SORT_MAXHEALTH_DEC)
-local JungleMinions = minionManager(MINION_JUNGLE, 1500, player, MINION_SORT_MAXHEALTH_DEC)
 local champLoaded = false
-local MMALoad, RebornLoad, SxOLoad, RevampedLoaded = false, false, false, false
+local MMALoaded, RebornLoaded, RevampedLoaded, SxOLoaded, SACLoaded = nil, nil, nil, nil, nil
 
 local MyminBBox = GetDistance(myHero.minBBox)/2
 local AARange = myHero.range+MyminBBox
@@ -172,23 +163,48 @@ local InterruptList = {
 }
 local ToInterrupt = {}
 
-
- if VIP_USER then
- 	AdvancedCallback:bind('OnApplyBuff', function(s, u, b) OnApplyBuff(s, u, b) end)
-	AdvancedCallback:bind('OnRemoveBuff', function(u, b) OnRemoveBuff(u, b) end)
-	AdvancedCallback:bind('OnUpdateBuff', function(u, b) OnUpdateBuff(u, b) end)
+local function OrbLoad()
+	if _G.MMA_Loaded then
+		MMALoaded = true
+		PrintMessage("Found MMA")
+	elseif _G.AutoCarry then
+		if _G.AutoCarry.Helper then
+			RebornLoaded = true
+			PrintMessage("Found SAC: Reborn")
+		else
+			RevampedLoaded = true
+			PrintMessage("Found SAC: Revamped")
+		end
+	elseif _G.Reborn_Loaded then
+		SACLoaded = true
+		DelayAction(OrbLoad, 1)
+	elseif FileExist(LIB_PATH .. "SxOrbWalk.lua") then
+		require 'SxOrbWalk'
+		SxO = SxOrbWalk()
+		SxOLoaded = true
+		PrintMessage("Loaded SxO")
+	elseif FileExist(LIB_PATH .. "SOW.lua") then
+		require 'SOW'
+		SOW = SOW(VP)
+		SOWLoaded = true
+		ScriptMsg("Loaded SOW")
+	else
+		PrintMessage("Cant Fine OrbWalker")
+	end
 end
-
+JungleMobs = {}
+	JungleFocusMobs = {}
 function OnLoad()
 	champ = champ()
 	self = champ
 
 	if not champ then AutoupdaterMsg("There was an error while loading " .. player.charName .. ", please report the shown error to Yours, thanks!") return else champLoaded = true end
 
-	AutoupdaterMsg(player.charName.." Load")
-	OnOrbLoad()
+	PrintMessage(player.charName.." Load")
+	OrbLoad()
 	VP = VPrediction()
 	STS = SimpleTS()
+	
 
 	LoadMenu()
 
@@ -207,13 +223,9 @@ function OnLoad()
 		TwistedTreeline = false
 	end
 	setting()
-
 end
 
 function setting()
-
-	JungleMobs = {}
-	JungleFocusMobs = {}
 
 	if not TwistedTreeline then
 		JungleMobNames = {
@@ -280,53 +292,7 @@ function setting()
 			["TT_NWolf26.1.3"]			= true
 		}
 	end
-
-	for i = 0, objManager.maxObjects do
-		local object = objManager:getObject(i)
-		if object and object.valid and not object.dead then
-			if FocusJungleNames[object.name] then
-				JungleFocusMobs[#JungleFocusMobs+1] = object
-			elseif JungleMobNames[object.name] then
-				JungleMobs[#JungleMobs+1] = object
-			end
-		end
-	end
-end
-
-function OnRemoveBuff(u, b)
-	if player.charName == "Kalista" and  b.name == "kalistaexpungemarker" and u.type == player.type  then
-		Kalistastack[u.charName].stack = 0
-	end
-	if player.charName == "Jinx" and b.name == "jinxqramp" then
-		JinxQ = 0
-	end
-	if player.charName == "Jinx" and buff.name == 'JinxQ' then
-		isFishBones = false
-	end
-end
-
-function OnUpdateBuff(u, b, s)
-	if player.charName == "Kalista" and  s ~= nil and b.name == "kalistaexpungemarker" and u.type == player.type then
-		Kalistastack[u.charName].stack = s
-		print(u.charName.." : "..s)
-	end
-	if player.charName == "Jinx" and b.name == "jinxqramp" then
-		JinxQ = s
-	end
-end
-
-function OnApplyBuff(s, u, b)
-	if player.charName == "Kalista" and  b.name == "kalistaexpungemarker" and u.type == player.type  then
-		if Kalistastack[u.charName] == nil then
-			Kalistastack[u.charName] = {stack = 1}
-		end
-	end
-	if player.charName == "Jinx" and b.name == "jinxqramp" then
-		JinxQ = 1
-	end
-	if player.charName == "Jinx" and buff.name == 'JinxQ' then
-		isFishBones = true
-	end
+	 _JungleMobs = minionManager(MINION_JUNGLE, 1500, myHero, MINION_SORT_MAXHEALTH_DEC)
 end
 
 function OnTick()
@@ -357,26 +323,18 @@ function OnDraw()
 	end
 end
 
-function OnOrbLoad()
-	if _G.MMA_LOADED then
-		AutoupdaterMsg("MMA LOAD")
-		MMALoad = true
-	elseif _G.AutoCarry then
-		if _G.AutoCarry.Helper then
-			AutoupdaterMsg("SIDA AUTO CARRY: REBORN LOAD")
-			RebornLoad = true
-		else
-			AutoupdaterMsg("SIDA AUTO CARRY: REVAMPED LOAD")
-			RevampedLoaded = true
-		end
-	elseif _G.Reborn_Loaded then
-		DelayAction(OnOrbLoad, 1)
-	elseif FileExist(LIB_PATH .. "SxOrbWalk.lua") then
-		AutoupdaterMsg("SxOrbWalk Load")
-		require 'SxOrbWalk'
-		SxO = SxOrbWalk()
-		SxOLoad = true
-	end
+
+
+function OrbwalkCanMove()
+ 	if RebornLoaded then
+    	return _G.AutoCarry.Orbwalker:CanMove()
+ 	elseif MMALoaded then
+	    return _G.MMA_AbleToMove
+	 elseif SxOLoaded then
+ 	   return SxO:CanMove()
+	elseif SOWLoaded then
+	   return SOW:CanMove()
+	 end
 end
 
 local function OrbTarget(rance)
@@ -385,9 +343,9 @@ local function OrbTarget(rance)
 	if RebornLoad then T = _G.AutoCarry.Crosshair.Attack_Crosshair.target end
 	if RevampedLoaded then T = _G.AutoCarry.Orbwalker.target end
 	if SxOLoad then T = SxO:GetTarget() end
+	if SOWLoaded then T = SOW:GetTarget() end
 	if T == nil then 
 		T = STS:GetTarget(rance)
-		return T
 	end
 	if T and T.type == player.type and ValidTarget(T, rance) then
 		return T
@@ -431,6 +389,11 @@ function LoadMenu()
 
 
 		if champ.ApplyMenu then champ:ApplyMenu() end
+		
+		Config:addParam("INFO", "", SCRIPT_PARAM_INFO, "")
+		Config:addParam("Version", "Version", SCRIPT_PARAM_INFO, SCRIPT_INFO["Version"])
+		Config:addParam("Author", "Author", SCRIPT_PARAM_INFO, "Your")
+	
 
 
 end
@@ -495,30 +458,51 @@ end
 	end
 end]]
 
-function GetJungleMob(rance)
-	for _, Mob in pairs(JungleFocusMobs) do
-		if ValidTarget(Mob, rance) then return Mob end
-	end
-	for _, Mob in pairs(JungleMobs) do
-		if ValidTarget(Mob, rance) then return Mob end
-	end
+function GetBestLineFarmPosition(range, width, objects)
+
+    local BestPos 
+    local BestHit = 0
+    for i, object in ipairs(objects) do
+        local EndPos = Vector(myHero.visionPos) + range * (Vector(object) - Vector(myHero.visionPos)):normalized()
+        local hit = CountObjectsOnLineSegment(myHero.visionPos, EndPos, width, objects)
+        if hit > BestHit then
+            BestHit = hit
+            BestPos = Vector(object)
+            if BestHit == #objects then
+               break
+            end
+         end
+    end
+
+    return BestPos, BestHit
+
 end
 
-function GetBestLineFarmPosition(range, width, objects)
-	local BestPos
-	local BestHit = 0
-	for i, object in ipairs(objects) do
-		local EndPos = Vector(player.visionPos) + range * (Vector(object) - Vector(player.visionPos)):normalized()
-		local hit = CountObjectsOnLineSegment(player.visionPos, EndPos, width, objects)
-		if hit > BestHit then
-			BestHit = hit
-			BestPos = Vector(object)
-			if BestHit == #objects then
-			   break
-			end
-		 end
-	end
-	return BestPos, BestHit
+function GetBestCircularFarmPosition(range, radius, objects)
+    local BestPos 
+    local BestHit = 0
+    for i, object in ipairs(objects) do
+        local hit = CountObjectsNearPos(object.visionPos or object, range, radius, objects)
+        if hit > BestHit then
+            BestHit = hit
+            BestPos = Vector(object)
+            if BestHit == #objects then
+               break
+            end
+         end
+    end
+    return BestPos, BestHit
+end
+
+function CountObjectsOnLineSegment(StartPos, EndPos, width, objects)
+    local n = 0
+    for i, object in ipairs(objects) do
+        local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, object)
+        if isOnSegment and GetDistanceSqr(pointSegment, object) < width * width then
+            n = n + 1
+        end
+    end
+    return n
 end
 
 
@@ -588,22 +572,16 @@ function Graves:OnTick()
  end
 
  function Graves:LineClear()
-	JungleMinions:update()
-	for i, minion in pairs(JungleMinions.objects) do
-		if minion ~= nil and not minion.dead and GetDistance(minion) < 900 and Config.lc.useq and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			local bestpos, besthit = GetBestLineFarmPosition(900, 1000, JungleMinions.objects)
-			if bestpos ~= nil then
-				CastSpell(_Q, bestpos.x, bestpos.z)
-			end
+	_JungleMobs:update()
+	for i, minion in pairs(_JungleMobs.objects) do
+		if minion ~= nil and Config.lc.useq and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
+			CastSpell(_Q, minion.x, minion.z)
 		end
 	end
 	EnemyMinions:update()
 	for i, minion in pairs(EnemyMinions.objects) do
-		if minion ~= nil and not minion.dead and GetDistance(minion) < 900 and Config.lc.useq and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			local bestpos, besthit = GetBestLineFarmPosition(900, 1000, EnemyMinions.objects)
-			if bestpos ~= nil then
-				CastSpell(_Q, bestpos.x, bestpos.z)
-			end
+		if minion ~= nil and Config.lc.useq and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
+			CastSpell(_Q, minion.x, minion.z)
 		end
 	end
 end
@@ -635,10 +613,9 @@ end
 ---------------------------------------------------------
 
 function Corki:__init()
+end
 
- end
-
- function Corki:OnCombo()
+function Corki:OnCombo()
 	local Target = OrbTarget(1300)
 	if Target ~= nil then
 		if GetDistance(Target, player) < 825 and Qready and Config.combo.useq then
@@ -657,7 +634,7 @@ function Corki:__init()
 			end
 		end
 	end
- end
+end
 
  function Corki:OnHarass()
 	local Target = OrbTarget(1300)
@@ -681,28 +658,22 @@ function Corki:OnTick()
 end
 
  function Corki:LineClear()
-	JungleMinions:update()
-	for i, minion in pairs(JungleMinions.objects) do
+	_JungleMobs:update()
+	for i, minion in pairs(_JungleMobs.objects) do
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 900 and Config.lc.useq and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			local bestpos, besthit = GetBestLineFarmPosition(825, 450, JungleMinions.objects)
-			if bestpos ~= nil then
-				CastSpell(_Q, bestpos.x, bestpos.z)
-			end
+			CastSpell(_Q, minion.x, minion.z)
 		end
-		if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 75, 1225, 2000, player, true)
-			if HitChance >= 2 then
-				CastSpell(_R, CastPosition.x, CastPosition.z)
-			end
+	end
+	if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
+		local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 75, 1225, 2000, player, true)
+		if HitChance >= 2 then
+			CastSpell(_R, CastPosition.x, CastPosition.z)
 		end
 	end
 	EnemyMinions:update()
 	for i, minion in pairs(EnemyMinions.objects) do
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 900 and Config.lc.useq and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			local bestpos, besthit = GetBestLineFarmPosition(825, 450, EnemyMinions.objects)
-			if bestpos ~= nil then
-				CastSpell(_Q, bestpos.x, bestpos.z)
-			end
+			CastSpell(_Q, minion.x, minion.z)
 		end
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
 			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 75, 1225, 2000, player, true)
@@ -722,7 +693,7 @@ end
 	end
  end
 
- function Corki:ApplyMenu()
+function Corki:ApplyMenu()
 		Config.combo:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("usee", "Use E", SCRIPT_PARAM_ONOFF, true)
 		Config.combo:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
@@ -815,8 +786,8 @@ function Urgot:__init()
 function Urgot:LineClear()
 
 	if Config.lc.active and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-		JungleMinions:update()
-		for i, minion in ipairs(JungleMinions.objects) do
+		_JungleMobs:update()
+		for i, minion in ipairs(_JungleMobs.objects) do
 			if ValidTarget(minion) and GetDistance(minion) <= 1200 and Qready and Config.lc.useq then
 				local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.5, 75, 1200, 1500, player, true)
 				if HitChance >= 2 and GetDistance(CastPosition) < 1200 then
@@ -970,8 +941,8 @@ end
 
 function Ezreal:LineClear()
 	if Config.lc.active and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-		JungleMinions:update()
-		for i, minion in ipairs(JungleMinions.objects) do
+		_JungleMobs:update()
+		for i, minion in ipairs(_JungleMobs.objects) do
 			if ValidTarget(minion) and GetDistance(minion) <= 1150 and Qready and Config.lc.useq then
 				local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 50, 1150, 2025, player, true)
 				if HitChance >= 2 and GetDistance(CastPosition) < 1150 then
@@ -1056,6 +1027,8 @@ function Ezreal:ApplyMenu()
 		Config.fm:addParam("useq", "Use Q", SCRIPT_PARAM_ONOFF, true)
 end
 
+
+
 function KogMaw:__init()
 end
 
@@ -1139,22 +1112,16 @@ end
 function KogMaw:LineClear()
 	if Config.lc.active and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
 		local Rrance = champ.GetRrance()
-		JungleMinions:update()
-		for i, minion in ipairs(JungleMinions.objects) do
+		_JungleMobs:update()
+		for i, minion in ipairs(_JungleMobs.objects) do
 			if ValidTarget(minion) and GetDistance(minion) <= Rrance and Rready and Config.lc.user then
-				local bestpos, besthit = GetBestLineFarmPosition(Rrance, 225, JungleMinions.objects)
-				if bestpos ~= nil then
-					CastSpell(_R, bestpos.x, bestpos.z)
-				end
+				CastSpell(_R, bestpos.x, bestpos.z)
 			end
 		end
 		EnemyMinions:update()
 		for i, minion in ipairs(EnemyMinions.objects) do
 			if ValidTarget(minion) and GetDistance(minion) <= Rrance and Rready and Config.lc.user then
-				local bestpos, besthit = GetBestLineFarmPosition(Rrance, 225, EnemyMinions.objects)
-				if bestpos ~= nil then
-					CastSpell(_R, bestpos.x, bestpos.z)
-				end
+				CastSpell(_R, bestpos.x, bestpos.z)
 			end
 		end
 	end
@@ -1184,6 +1151,8 @@ function KogMaw:ApplyMenu()
 		Config.ks:addParam("user", "Use R", SCRIPT_PARAM_ONOFF, true)
 
 end
+
+
 
 function Tristana:__init()
 end
@@ -1257,9 +1226,9 @@ function Kalista:OnTick()
 	for i , j in ipairs(GetEnemyHeroes()) do
 		if not Kalistastack[j.charName].stack == nil or not Kalistastack[j.charName].stack-1 < 0 then
 			if GetDistance(j) < 400 then
-			if j.health <= (getDmg("E", j, myHero)*(Kalistastack[j.charName].stack-1)) then
-				CastSpell(_E)
-			end
+				if j.health <= (getDmg("E", j, myHero)*(Kalistastack[j.charName].stack-1)) then
+					CastSpell(_E)
+				end
 			end
 		end
 	end
@@ -1268,6 +1237,7 @@ end
 function Kalista:ApplyMenu()
 end
 ]]
+
 --[[function Karthus:__init()
 end
 
