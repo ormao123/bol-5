@@ -2,6 +2,8 @@
  --[[
   Update Note
   
+  v 1.07	Add HPrediction - Support { Corki , Ezreal }
+  
   v 1.06	Optimization
 			Fix LineClear
 			Fix Bug
@@ -23,7 +25,7 @@
 
 local SCRIPT_INFO = {
 	["Name"] = "Your ADC Series",
-	["Version"] = 1.06,
+	["Version"] = 1.07,
 	["Author"] = {
 		["Your"] = "http://forum.botoflegends.com/user/145247-"
 	},
@@ -71,7 +73,7 @@ local champions = {
 	--["Ashe"]		= true,
 	["Urgot"]		= true,
 	["Ezreal"]		= true,
-	["Jinx"]		= true,
+	--["Jinx"]		= true,
 	--["Kalista"]		= true,
 	--["Caitlyn"]		= true,
 	["KogMaw"]		= true,
@@ -79,6 +81,24 @@ local champions = {
 	["Tristana"]	= true,
 	--["Twitch"]		= true,
 }
+
+local HPchamp = {
+	["Ezreal"]		= true,
+	["Corki"]		= true,
+}
+
+local Prediction = {"VPrediction"}
+
+if FileExist(LIB_PATH.."HPrediction.lua") then
+	if HPchamp[myHero.charName] then
+		PrintMessage("This Champ Support HPrediction")
+		require "HPrediction"
+		table.insert(Prediction, "HPrediction")
+		HPred = HPrediction()
+	else
+		PrintMessage("This champ not Support HPrediction")
+	end
+end
 
 for k, _ in pairs(champions) do
     local className = k:gsub("%s+", "")
@@ -90,7 +110,7 @@ if not champions[myHero.charName] then return end
 
 
 local champ = champions[myHero.charName]
-local HPred, SxO, STS, DP = nil, nil, nil, nil
+local SxO, STS, DP = nil, nil, nil
 local ts
 local Config = nil
 local player = myHero
@@ -361,7 +381,9 @@ function LoadMenu()
 		
 		Config:SetTargetSelector(STS)
 		Config = Config:GetHandle()
-
+		Config:addSubMenu("Prediction", "Prediction")
+			Config.Prediction:addParam("Pred", "Prediction", SCRIPT_PARAM_LIST, 1, Prediction)
+		
 		if champ.OnCombo then
 			Config:addSubMenu("Combo", "combo")
 				Config.combo:addParam("active", "Combo Active", SCRIPT_PARAM_ONKEYDOWN, false, 32)
@@ -619,19 +641,13 @@ function Corki:OnCombo()
 	local Target = OrbTarget(1300)
 	if Target ~= nil then
 		if GetDistance(Target, player) < 825 and Qready and Config.combo.useq then
-			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(Target, 0.5, 450, 825, 1125, player)
-			if TargetHitChance >= 2 then
-				CastSpell(_Q, CastPosition.x, CastPosition.z)
-			end
+			champ:CastQ(Target)
 		end
 		if GetDistance(Target, player) < 600 and Eready and Config.combo.usee then
 			CastSpell(_E, Target)
 		end
 		if GetDistance(Target, player) < 1225 and Rready and Config.combo.user then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
-			if HitChance >= Config.combo.rhitchance then
-				CastSpell(_R, CastPosition.x, CastPosition.z)
-			end
+			champ:CastR(Target)
 		end
 	end
 end
@@ -640,19 +656,41 @@ end
 	local Target = OrbTarget(1300)
 	if Target ~= nil then
 		if GetDistance(Target, player) < 825 and Qready and Config.harass.useq and player.mana > (player.maxMana*(Config.harass.perq*0.01)) then
-			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(Target, 0.5, 450, 825, 1125, player)
-			if TargetHitChance >= 2 then
-				CastSpell(_Q, CastPosition.x, CastPosition.z)
-			end
+			champ:CastQ(Target)
 		end
 		if GetDistance(Target, player) < 1225 and Rready and Config.harass.user and player.mana > (player.maxMana*(Config.harass.perr*0.01)) then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
-			if HitChance >= Config.combo.rhitchance then
-				CastSpell(_R, CastPosition.x, CastPosition.z)
-			end
+			champ:CastR(Target)
 		end
 	end
  end
+ 
+ function Corki:CastQ(Target)
+	if Config.Prediction.Pred == 1 then
+		local CastPosition,  HitChance,  Position = VP:GetCircularAOECastPosition(Target, 0.5, 450, 825, 1125, player)
+		if GetDistance(CastPosition) < 1200 then
+			CastSpell(_Q, CastPosition.x, CastPosition.z)
+		end
+	elseif Config.Prediction.Pred == 2 then
+		local QPos, QHitChance = HPred:GetPredict("Q", Target, player)
+		if QPos ~= nil and QHitChance >= 1.4 then
+			CastSpell(_Q, QPos.x, QPos.z)
+		end
+	end
+end
+
+function Corki:CastR(Target)
+	if Config.Prediction.Pred == 1 then
+		local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
+		if HitChance >= Config.combo.rhitchance and GetDistance(CastPosition) < 1200 then
+			CastSpell(_W, CastPosition.x, CastPosition.z)
+		end
+	elseif Config.Prediction.Pred == 2 then
+		local Pos, HitChance = HPred:GetPredict("R", Target, player)
+		if Pos ~= nil and HitChance >= 1.4 then
+			CastSpell(_R, Pos.x, Pos.z)
+		end
+	end
+end
 
 function Corki:OnTick()
 end
@@ -661,25 +699,19 @@ end
 	_JungleMobs:update()
 	for i, minion in pairs(_JungleMobs.objects) do
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 900 and Config.lc.useq and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			CastSpell(_Q, minion.x, minion.z)
+			champ:CastQ(minion)
 		end
 	end
 	if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-		local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 75, 1225, 2000, player, true)
-		if HitChance >= 2 then
-			CastSpell(_R, CastPosition.x, CastPosition.z)
-		end
+		champ:CastR(minion)
 	end
 	EnemyMinions:update()
 	for i, minion in pairs(EnemyMinions.objects) do
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 900 and Config.lc.useq and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			CastSpell(_Q, minion.x, minion.z)
+			champ:CastQ(minion)
 		end
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 1125 and Config.lc.user and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 75, 1225, 2000, player, true)
-			if HitChance >= 2 then
-				CastSpell(_R, CastPosition.x, CastPosition.z)
-			end
+			champ:CastR(minion)
 		end
 	end
 end
@@ -912,16 +944,10 @@ function Ezreal:OnCombo()
 	local Target = OrbTarget(1200)
 	if Target ~= nil then
 		if Config.combo.useq and Qready then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 50, 1150, 2025, player, true)
-			if HitChance >= Config.combo.qhitchance and GetDistance(CastPosition) < 1200 then
-				CastSpell(_Q, CastPosition.x, CastPosition.z)
-			end
+			champ:CastQ(Target)
 		end
 		if Config.combo.usew and Wready then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 50, 1150, 2025, player, true)
-			if HitChance >= Config.combo.whitchance and GetDistance(CastPosition) < 1200 then
-				CastSpell(_W, CastPosition.x, CastPosition.z)
-			end
+			champ:CastW(Target)
 		end
 	end
 end
@@ -930,10 +956,7 @@ function Ezreal:OnHarass()
 	local Target = OrbTarget(1200)
 	if Target ~= nil then
 		if Config.harass.useq and Qready and player.mana > (player.maxMana*(Config.harass.perq*0.01)) then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 50, 1150, 2025, player, true)
-			if HitChance >= Config.combo.qhitchance and GetDistance(CastPosition) < 1200 then
-				CastSpell(_Q, CastPosition.x, CastPosition.z)
-			end
+			champ:CastQ(Target)
 		end
 	end
 end
@@ -944,20 +967,43 @@ function Ezreal:LineClear()
 		_JungleMobs:update()
 		for i, minion in ipairs(_JungleMobs.objects) do
 			if ValidTarget(minion) and GetDistance(minion) <= 1150 and Qready and Config.lc.useq then
-				local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 50, 1150, 2025, player, true)
-				if HitChance >= 2 and GetDistance(CastPosition) < 1150 then
-					CastSpell(_Q, CastPosition.x, CastPosition.z)
-				end
+				champ:CastQ(minion)
 			end
 		end
 		EnemyMinions:update()
 		for i, minion in ipairs(EnemyMinions.objects) do
 			if ValidTarget(minion) and GetDistance(minion) <= 1150 and Qready and Config.lc.useq then
-				local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 50, 1150, 2025, player, true)
-				if HitChance >= 2 and GetDistance(CastPosition) < 1150 then
-					CastSpell(_Q, CastPosition.x, CastPosition.z)
-				end
+				champ:CastQ(minion)
 			end
+		end
+	end
+end
+
+
+function Ezreal:CastQ(Target)
+	if Config.Prediction.Pred == 1 then
+		local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 50, 1150, 2025, player, true)
+		if HitChance >= Config.combo.qhitchance and GetDistance(CastPosition) < 1200 then
+			CastSpell(_Q, CastPosition.x, CastPosition.z)
+		end
+	elseif Config.Prediction.Pred == 2 then
+		local QPos, QHitChance = HPred:GetPredict("Q", Target, player)
+		if QPos ~= nil and QHitChance >= 1.4 then
+			CastSpell(_Q, QPos.x, QPos.z)
+		end
+	end
+end
+
+function Ezreal:CastW(Target)
+	if Config.Prediction.Pred == 1 then
+		local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 50, 1150, 2025, player, true)
+		if HitChance >= Config.combo.qhitchance and GetDistance(CastPosition) < 1200 then
+			CastSpell(_W, CastPosition.x, CastPosition.z)
+		end
+	elseif Config.Prediction.Pred == 2 then
+		local Pos, HitChance = HPred:GetPredict("W", Target, player)
+		if Pos ~= nil and HitChance >= 1.4 then
+			CastSpell(_W, Pos.x, Pos.z)
 		end
 	end
 end
@@ -993,10 +1039,7 @@ function Ezreal:OnFarm()
 	EnemyMinions:update()
 	for i, minion in ipairs(EnemyMinions.objects) do
 		if ValidTarget(minion) and GetDistance(minion) <= 1150 and Qready and getDmg("Q", minion, player) > minion.health and Config.fm.useq then
-			local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(minion, 0.25, 50, 1150, 2025, player, true)
-			if HitChance >= Config.combo.qhitchance and GetDistance(CastPosition) < 1150 then
-				CastSpell(_Q, CastPosition.x, CastPosition.z)
-			end
+			champ:CastQ(minion)
 		end
 	end
 end
