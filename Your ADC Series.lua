@@ -1,31 +1,34 @@
 
  --[[
   Update Note
-  
+
+  v 1.08	Add scriptstatu tracker
+
   v 1.07	Add HPrediction - Support { Corki , Ezreal }
-  
+
   v 1.06	Optimization
 			Fix LineClear
 			Fix Bug
 			Fix Updater
 
   v 1.05	Fix Bug
-  
+
   v 1.04 	Fix TargetSelector
-  
+
   v 1.03 	Add Corki Htichance in Menu
-  
+
   v 1.02	Add Tristana
 			Add Anti Gapcloser
 			Add Anti Spell
-			
+
   v 1.01	Add Kog'Maw
 
  ]]
 
+
 local SCRIPT_INFO = {
 	["Name"] = "Your ADC Series",
-	["Version"] = 1.07,
+	["Version"] = 1.08,
 	["Author"] = {
 		["Your"] = "http://forum.botoflegends.com/user/145247-"
 	},
@@ -42,7 +45,7 @@ local SCRIPT_LIBS = {
 	["VPrediction"] = "https://raw.github.com/LegendBot/Scripts/master/Common/VPrediction.lua",
 }
 
-function PrintMessage(message) 
+function PrintMessage(message)
 	print("<font color=\"#00A300\"><b>"..SCRIPT_INFO["Name"]..":</b></font> <font color=\"#FFFFFF\">"..message.."</font>")
 end
 --{ Initiate Script (Checks for updates)
@@ -62,6 +65,8 @@ function Initiate()
 	end
 end
 if Initiate() then return end
+
+assert(load(Base64Decode("G0x1YVIAAQQEBAgAGZMNChoKAAAAAAAAAAAAAQIKAAAABgBAAEFAAAAdQAABBkBAAGUAAAAKQACBBkBAAGVAAAAKQICBHwCAAAQAAAAEBgAAAGNsYXNzAAQNAAAAU2NyaXB0U3RhdHVzAAQHAAAAX19pbml0AAQLAAAAU2VuZFVwZGF0ZQACAAAAAgAAAAgAAAACAAotAAAAhkBAAMaAQAAGwUAABwFBAkFBAQAdgQABRsFAAEcBwQKBgQEAXYEAAYbBQACHAUEDwcEBAJ2BAAHGwUAAxwHBAwECAgDdgQABBsJAAAcCQQRBQgIAHYIAARYBAgLdAAABnYAAAAqAAIAKQACFhgBDAMHAAgCdgAABCoCAhQqAw4aGAEQAx8BCAMfAwwHdAIAAnYAAAAqAgIeMQEQAAYEEAJ1AgAGGwEQA5QAAAJ1AAAEfAIAAFAAAAAQFAAAAaHdpZAAEDQAAAEJhc2U2NEVuY29kZQAECQAAAHRvc3RyaW5nAAQDAAAAb3MABAcAAABnZXRlbnYABBUAAABQUk9DRVNTT1JfSURFTlRJRklFUgAECQAAAFVTRVJOQU1FAAQNAAAAQ09NUFVURVJOQU1FAAQQAAAAUFJPQ0VTU09SX0xFVkVMAAQTAAAAUFJPQ0VTU09SX1JFVklTSU9OAAQEAAAAS2V5AAQHAAAAc29ja2V0AAQIAAAAcmVxdWlyZQAECgAAAGdhbWVTdGF0ZQAABAQAAAB0Y3AABAcAAABhc3NlcnQABAsAAABTZW5kVXBkYXRlAAMAAAAAAADwPwQUAAAAQWRkQnVnc3BsYXRDYWxsYmFjawABAAAACAAAAAgAAAAAAAMFAAAABQAAAAwAQACBQAAAHUCAAR8AgAACAAAABAsAAABTZW5kVXBkYXRlAAMAAAAAAAAAQAAAAAABAAAAAQAQAAAAQG9iZnVzY2F0ZWQubHVhAAUAAAAIAAAACAAAAAgAAAAIAAAACAAAAAAAAAABAAAABQAAAHNlbGYAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQAtAAAAAwAAAAMAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAUAAAAFAAAABQAAAAUAAAAFAAAABQAAAAUAAAAFAAAABgAAAAYAAAAGAAAABgAAAAUAAAADAAAAAwAAAAYAAAAGAAAABgAAAAYAAAAGAAAABgAAAAYAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAIAAAACAAAAAgAAAAIAAAAAgAAAAUAAABzZWxmAAAAAAAtAAAAAgAAAGEAAAAAAC0AAAABAAAABQAAAF9FTlYACQAAAA4AAAACAA0XAAAAhwBAAIxAQAEBgQAAQcEAAJ1AAAKHAEAAjABBAQFBAQBHgUEAgcEBAMcBQgABwgEAQAKAAIHCAQDGQkIAx4LCBQHDAgAWAQMCnUCAAYcAQACMAEMBnUAAAR8AgAANAAAABAQAAAB0Y3AABAgAAABjb25uZWN0AAQRAAAAc2NyaXB0c3RhdHVzLm5ldAADAAAAAAAAVEAEBQAAAHNlbmQABAsAAABHRVQgL3N5bmMtAAQEAAAAS2V5AAQCAAAALQAEBQAAAGh3aWQABAcAAABteUhlcm8ABAkAAABjaGFyTmFtZQAEJgAAACBIVFRQLzEuMA0KSG9zdDogc2NyaXB0c3RhdHVzLm5ldA0KDQoABAYAAABjbG9zZQAAAAAAAQAAAAAAEAAAAEBvYmZ1c2NhdGVkLmx1YQAXAAAACgAAAAoAAAAKAAAACgAAAAoAAAALAAAACwAAAAsAAAALAAAADAAAAAwAAAANAAAADQAAAA0AAAAOAAAADgAAAA4AAAAOAAAACwAAAA4AAAAOAAAADgAAAA4AAAACAAAABQAAAHNlbGYAAAAAABcAAAACAAAAYQAAAAAAFwAAAAEAAAAFAAAAX0VOVgABAAAAAQAQAAAAQG9iZnVzY2F0ZWQubHVhAAoAAAABAAAAAQAAAAEAAAACAAAACAAAAAIAAAAJAAAADgAAAAkAAAAOAAAAAAAAAAEAAAAFAAAAX0VOVgA="), nil, "bt", _ENV))() ScriptStatus("WJMKRPJOIPK")
 
 local champions = {
 	["Graves"]		= true,
@@ -224,7 +229,7 @@ function OnLoad()
 	OrbLoad()
 	VP = VPrediction()
 	STS = SimpleTS()
-	
+
 
 	LoadMenu()
 
@@ -364,7 +369,7 @@ local function OrbTarget(rance)
 	if RevampedLoaded then T = _G.AutoCarry.Orbwalker.target end
 	if SxOLoad then T = SxO:GetTarget() end
 	if SOWLoaded then T = SOW:GetTarget() end
-	if T == nil then 
+	if T == nil then
 		T = STS:GetTarget(rance)
 	end
 	if T and T.type == player.type and ValidTarget(T, rance) then
@@ -378,12 +383,12 @@ function LoadMenu()
 		if SxOLoad then
 			Config:SetOrbwalker(SxO)
 		end
-		
+
 		Config:SetTargetSelector(STS)
 		Config = Config:GetHandle()
 		Config:addSubMenu("Prediction", "Prediction")
 			Config.Prediction:addParam("Pred", "Prediction", SCRIPT_PARAM_LIST, 1, Prediction)
-		
+
 		if champ.OnCombo then
 			Config:addSubMenu("Combo", "combo")
 				Config.combo:addParam("active", "Combo Active", SCRIPT_PARAM_ONKEYDOWN, false, 32)
@@ -411,11 +416,11 @@ function LoadMenu()
 
 
 		if champ.ApplyMenu then champ:ApplyMenu() end
-		
+
 		Config:addParam("INFO", "", SCRIPT_PARAM_INFO, "")
 		Config:addParam("Version", "Version", SCRIPT_PARAM_INFO, SCRIPT_INFO["Version"])
 		Config:addParam("Author", "Author", SCRIPT_PARAM_INFO, "Your")
-	
+
 
 
 end
@@ -482,7 +487,7 @@ end]]
 
 function GetBestLineFarmPosition(range, width, objects)
 
-    local BestPos 
+    local BestPos
     local BestHit = 0
     for i, object in ipairs(objects) do
         local EndPos = Vector(myHero.visionPos) + range * (Vector(object) - Vector(myHero.visionPos)):normalized()
@@ -501,7 +506,7 @@ function GetBestLineFarmPosition(range, width, objects)
 end
 
 function GetBestCircularFarmPosition(range, radius, objects)
-    local BestPos 
+    local BestPos
     local BestHit = 0
     for i, object in ipairs(objects) do
         local hit = CountObjectsNearPos(object.visionPos or object, range, radius, objects)
@@ -663,7 +668,7 @@ end
 		end
 	end
  end
- 
+
  function Corki:CastQ(Target)
 	if Config.Prediction.Pred == 1 then
 		local CastPosition,  HitChance,  Position = VP:GetCircularAOECastPosition(Target, 0.5, 450, 825, 1125, player)
