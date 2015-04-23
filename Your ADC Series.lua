@@ -2,6 +2,8 @@
  --[[
   Update Note
   
+  v 1.10	Fix CogMow
+  
   v 1.09	Fix CogMow
   
   v 1.08	Add scriptstatu tracker
@@ -30,7 +32,7 @@
 
 local SCRIPT_INFO = {
 	["Name"] = "Your ADC Series",
-	["Version"] = 1.09,
+	["Version"] = 1.10,
 	["Author"] = {
 		["Your"] = "http://forum.botoflegends.com/user/145247-"
 	},
@@ -220,7 +222,7 @@ local function OrbLoad()
 	end
 end
 JungleMobs = {}
-	JungleFocusMobs = {}
+JungleFocusMobs = {}
 function OnLoad()
 	champ = champ()
 	self = champ
@@ -330,9 +332,6 @@ function OnTick()
         champ:OnTick()
     end
 
-
-
-
 	if champ.OnCombo and Config.combo.active then
         champ:OnCombo()
     elseif champ.OnHarass and Config.harass.active then
@@ -363,7 +362,31 @@ function OrbwalkCanMove()
 	   return SOW:CanMove()
 	 end
 end
+--[[
+function EnableAttack()
+ 	if RebornLoaded then
+		_G.AutoCarry.MyHero:AttacksEnabled(true)
+ 	elseif MMALoaded then
+	
+	elseif SxOLoaded then
+		SxO:EnableAttacks()
+	elseif SOWLoaded then
+		SOW:
+	end
+end
 
+function DisableAttack()
+ 	if RebornLoaded then
+		_G.AutoCarry.MyHero:AttacksEnabled(false)
+ 	elseif MMALoaded then
+	
+	elseif SxOLoaded then
+		SxO:DisableAttacks()
+	elseif SOWLoaded then
+		SOW:
+	end
+end
+]]
 local function OrbTarget(rance)
 	local T
 	if MMALoad then T = _G.MMA_Target end
@@ -427,9 +450,9 @@ function LoadMenu()
 
 end
 
-function buffcheck(target)
+function buffcheck(target, buffname)
 	if player.charName == "Urgot" then
-		return TargetHaveBuff("urgotcorrosivedebuff", target)
+		return TargetHaveBuff(buffname, target)
 	end
 end
 
@@ -778,7 +801,7 @@ function Urgot:__init()
 				if Config.combo.usew and Wready and GetDistance(Target, player) < 1200 then
 					CastSpell(_W)
 				end
-				if buffcheck(Target) then
+				if buffcheck(Target, "urgotcorrosivedebuff") then
 					local CastPosition, HitChance, Position = VP:GetCircularCastPosition(Target, 0.5, 75, 1200)
 					if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 1200 and Target.dead == false then
 							CastSpell(_Q, CastPosition.x, CastPosition.z)
@@ -1100,7 +1123,7 @@ function KogMaw:OnCombo()
 				CastSpell(_E, CastPos.x, CastPos.z)
 			end
 		end
-		local Rrance = champ.GetRrance()
+		local Rrance = champ:GetRrance()
 		if Config.combo.user and GetDistance(Target) < Rrance and Rrance then
 			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(Target, 1.1, 225, Rrance, math.huge, player)
 			if TargetHitChance >= 2 then
@@ -1112,7 +1135,7 @@ end
 
 function KogMaw:OnHarass()
 	local Target = OrbTarget(1600)
-	local Rrance = champ.GetRrance()
+	local Rrance = champ:GetRrance()
 	if Target ~= nil then
 		if player.mana > (player.maxMana*(Config.harass.perq*0.01)) then
 			if Config.harass.usee and GetDistance(Target) < 1200 and Eready then
@@ -1133,7 +1156,7 @@ end
 
 function KogMaw:OnTick()
 	local i, t
-	local Rrance = champ.GetRrance()
+	local Rrance = champ:GetRrance()
 	for i, t in pairs(enemyHeroes) do
 		if ValidTarget(t) and Config.ks.user and getDmg("R", t, player) > t.health then
 			local CastPosition, TargetHitChance, Targets = VP:GetCircularAOECastPosition(t, 1.1, 225, Rrance, math.huge, player)
@@ -1161,7 +1184,7 @@ end
 
 function KogMaw:LineClear()
 	if Config.lc.active and player.mana > (player.maxMana*(Config.lc.perq*0.01)) then
-		local Rrance = champ.GetRrance()
+		local Rrance = champ:GetRrance()
 		_JungleMobs:update()
 		for i, minion in ipairs(_JungleMobs.objects) do
 			if ValidTarget(minion) and GetDistance(minion) <= Rrance and Rready and Config.lc.user then
@@ -1287,6 +1310,60 @@ end
 function Kalista:ApplyMenu()
 end
 ]]
+--[[
+function Vayne:__init()
+end
+
+function Vayne:OnCombo()
+end
+
+function Vayne:OnHarass()
+end
+
+function Vayne:Condemn()
+		if myHero.dead then return end
+	local ePos,Hitchance,predictpos = nil,nil,nil
+		 if PMenu.autoCondemn and myHero:CanUseSpell(_E) == READY then
+			for i, enemyHero in ipairs(enemyTable) do
+				if enemyHero ~= nil and enemyHero.valid and not enemyHero.dead and enemyHero.visible and GetDistance(enemyHero) <= 800 and GetDistance(enemyHero) > 0 then
+					throwaway, Hitchance, troll = VP:GetLineCastPosition(enemyHero, 0.250, 0, 600, 2200, myHero, false)
+					if Hitchance >= 1 then
+						ePos = troll
+					end
+				else
+					ePos = nil
+				end
+				maxxPushPosition = Vector(ePos) + (Vector(ePos) - myHero):normalized()*PMenu.pushDistance
+				if ePos ~= nil then
+					local checks = math.ceil(PMenu.accuracy)
+					local checkDistance = math.ceil(PMenu.pushDistance/checks)
+					local InsideTheWall = false
+					for k=1, checks, 1 do
+						local PushPosition = Vector(ePos) + Vector(Vector(ePos) - Vector(myHero)):normalized()*(checkDistance*k)
+						if IsWall(D3DXVECTOR3(PushPosition.x, PushPosition.y, PushPosition.z)) then
+							InsideTheWall = true
+							break
+						end
+					end
+					if InsideTheWall then
+						CastSpell(_E, enemyHero)
+					end
+				end
+			end
+		else
+			maxPushPosition = nil
+	end
+end
+]]
+
+function Vayne:OnTick()
+	if buffcheck(player, "vaynetumblefade") then
+	end
+end
+
+function Vayne:ApplyMenu()
+end
+
 
 --[[function Karthus:__init()
 end
