@@ -1354,7 +1354,7 @@ function Vayne:Condemn()
 			maxPushPosition = nil
 	end
 end
-]]
+
 
 function Vayne:OnTick()
 	if buffcheck(player, "vaynetumblefade") then
@@ -1363,7 +1363,7 @@ end
 
 function Vayne:ApplyMenu()
 end
-
+]]
 
 --[[function Karthus:__init()
 end
