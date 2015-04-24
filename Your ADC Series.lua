@@ -2,6 +2,8 @@
  --[[
   Update Note
   
+  v 1.11	Fix Corki
+  
   v 1.10	Fix CogMow
   
   v 1.09	Fix CogMow
@@ -32,7 +34,7 @@
 
 local SCRIPT_INFO = {
 	["Name"] = "Your ADC Series",
-	["Version"] = 1.10,
+	["Version"] = 1.11,
 	["Author"] = {
 		["Your"] = "http://forum.botoflegends.com/user/145247-"
 	},
@@ -712,7 +714,7 @@ function Corki:CastR(Target)
 	if Config.Prediction.Pred == 1 then
 		local CastPosition,  HitChance,  Position = VP:GetLineCastPosition(Target, 0.25, 75, 1225, 2000, player, true)
 		if HitChance >= Config.combo.rhitchance and GetDistance(CastPosition) < 1200 then
-			CastSpell(_W, CastPosition.x, CastPosition.z)
+			CastSpell(_R, CastPosition.x, CastPosition.z)
 		end
 	elseif Config.Prediction.Pred == 2 then
 		local Pos, HitChance = HPred:GetPredict("R", Target, player)
@@ -1310,7 +1312,7 @@ end
 function Kalista:ApplyMenu()
 end
 ]]
---[[
+
 function Vayne:__init()
 end
 
@@ -1363,7 +1365,7 @@ end
 
 function Vayne:ApplyMenu()
 end
-]]
+
 
 --[[function Karthus:__init()
 end
