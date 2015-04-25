@@ -101,14 +101,23 @@ v. 1.28
 v. 1.28
 
 Fix E
+
+
+v. 1.30
+
+Add Line Jungle Clear
+
+Add KillMark location changer
+
+Fix Q, W, E
+
+Optimization
+
 ]]
-
-
-
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.29
+local version = 1.30
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -136,7 +145,8 @@ end
 local SCRIPT_LIBS = {
 	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
 	["VPrediction"] = "https://raw.github.com/LegendBot/Scripts/master/Common/VPrediction.lua",
-	["DivinePred"] = "http://divinetek.rocks/divineprediction/DivinePred.lua"
+	["DivinePred"] = "http://divinetek.rocks/divineprediction/DivinePred.lua",
+	["HPrediction"]	= "https://raw.githubusercontent.com/BolHTTF/BoL/master/HTTF/Common/HPrediction.lua",
 }
 function Initiate()
 	for LIBRARY, LIBRARY_URL in pairs(SCRIPT_LIBS) do
@@ -165,9 +175,9 @@ if VIP_USER then
 	AdvancedCallback:bind('OnRemoveBuff', function(unit, buff) OnRemoveBuff(unit, buff) end)
 end
 
-local qRange = 875
-local wRange = 1000
-local eRange = 425
+local Qrange = 875
+local Wrange = 1000
+local Erange = 425
 
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
 local useingE = false
@@ -218,70 +228,170 @@ end
 function OnLoad()
 
 	OnOrbLoad()
-
+	
+	STS = SimpleTS()
 	VP = VPrediction()
 	dp = DivinePred()
-	if SxOLoad then
-		SxO:DisableAttacks()
+	if SxOLoad then SxO:DisableAttacks() end
+	
+	HPred = HPrediction()
+	-- Q
+	Spell_Q.delay['Karthus'] = 1
+	Spell_Q.radius['Karthus'] = 150
+	Spell_Q.range['Karthus'] = 875
+	Spell_Q.type['Karthus'] = "PromptCircle"
+	
+	-- W
+	Spell_W.collisionM['Karthus'] = false
+	Spell_W.collisionH['Karthus'] = false
+	Spell_W.delay['Karthus'] = 0.25
+	Spell_W.range['Karthus'] = 1000
+	Spell_W.type['Karthus'] = "DelayLine"
+	Spell_W.width['Karthus'] = 500
+  
+	
+	if GetGame().map.shortName == "twistedTreeline" then
+		TwistedTreeline = true
+	else
+		TwistedTreeline = false
 	end
-
+	
+	--UpdateWindow() 
+	Setting()
 	LoadMenu()
 	initialize()
 
-	DamageCalculator = DamageLib()
-	DamageCalculator:RegisterDamageSource(_Q, _MAGIC, 40, 20, _MAGIC, _AP, 0.30, myHero:CanUseSpell(_Q) == READY)
 
-	ts = TargetSelector(TARGET_LOW_HP_PRIORITY,wRange,DAMAGE_MAGIC, false)
 	enemyMinions = minionManager(MINION_ENEMY, 875, myHero, MINION_SORT_MAXHEALTH_DEC)
 
 end
 
 function LoadMenu()
-	ConfigY = scriptConfig("Your Karthus", "Karthus")
-		ConfigY:addSubMenu("combo", "combo")
-			ConfigY.combo:addParam("activecombo", "combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-			ConfigY.combo:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.combo:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.combo:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.combo:addParam("pere", "Until % use W", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
+	Config = scriptConfig("Your Karthus", "Karthus")
+	
+		Config:addSubMenu("TargetSelector", "TargetSelector")
+			STS:AddToMenu(Config.TargetSelector)
+		
+		Config:addSubMenu("combo", "combo")
+			Config.combo:addParam("activecombo", "combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+			Config.combo:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
+			Config.combo:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
+			Config.combo:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
+			Config.combo:addParam("pere", "Until % use W", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
 
-		ConfigY:addSubMenu("farm", "farm")
-			ConfigY.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
-			ConfigY.farm:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
+		Config:addSubMenu("farm", "farm")
+			Config.farm:addParam("farm", "farm", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+			Config.farm:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
 
-		ConfigY:addSubMenu("harass", "harass")
-			ConfigY.harass:addParam("harassactive", "harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
-			ConfigY.harass:addParam("harasstoggle", "harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("X"))
-			ConfigY.harass:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.harass:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-			ConfigY.harass:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.harass:addParam("pere", "Until % E", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-			--ConfigY.harass:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
-			--ConfigY.harass:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
+		Config:addSubMenu("harass", "harass")
+			Config.harass:addParam("harassactive", "harass", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+			Config.harass:addParam("harasstoggle", "harass Toggle", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("G"))
+			Config.harass:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
+			Config.harass:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+			Config.harass:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
+			Config.harass:addParam("pere", "Until % E", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+			--Config.harass:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
+			--Config.harass:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
+		
+		Config:addSubMenu("Clear", "Clear")
+			Config.Clear:addParam("ClearActice", "Clear Active", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("X"))
+			Config.Clear:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+			Config.Clear:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 
-		ConfigY:addSubMenu("Prediction", "pred")
-			ConfigY.pred:addParam("choose", "Chooes Type", SCRIPT_PARAM_LIST, 1, {"VPrediction", "DivinePred"})
+		Config:addSubMenu("Prediction", "pred")
+			Config.pred:addParam("choose", "Chooes Type", SCRIPT_PARAM_LIST, 1, {"VPrediction", "DivinePred" })
 
-		ConfigY:addSubMenu("killsteal", "killsteal")
-			ConfigY.killsteal:addParam("killstealmark", "Killsteal Mark", SCRIPT_PARAM_ONOFF, true)
-			--ConfigY.killsteal:addParam("killstealq", "Killsteal Q Toggle", SCRIPT_PARAM_ONOFF, true)
-			--ConfigY.killsteal:addParam("killstealhitchance", "Killsteal hit chance", SCRIPT_PARAM_LIST, 1, {"1", "2", "3", "4", "5"})
+		Config:addSubMenu("killsteal", "killsteal")
+			Config.killsteal:addParam("killstealmark", "Killsteal Mark", SCRIPT_PARAM_ONOFF, true)
+			--Config.killsteal:addParam("killstealq", "Killsteal Q Toggle", SCRIPT_PARAM_ONOFF, true)
+			--Config.killsteal:addParam("killstealhitchance", "Killsteal hit chance", SCRIPT_PARAM_LIST, 1, {"1", "2", "3", "4", "5"})
 
-		ConfigY:addSubMenu("ads", "ads")
-			--ConfigY.ads:addParam("adsr", "Use R After You dead", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.ads:addParam("autoff", "E Auto Off", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.ads:addParam("pa", "Passive Active Auto Attack", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.ads:addParam("dm", "Damage Manager", SCRIPT_PARAM_ONOFF, true)
+		Config:addSubMenu("ads", "ads")
+			--Config.ads:addParam("adsr", "Use R After You dead", SCRIPT_PARAM_ONOFF, true)
+			Config.ads:addParam("autoff", "E Auto Off", SCRIPT_PARAM_ONOFF, true)
+			Config.ads:addParam("pa", "Passive Active Auto Attack", SCRIPT_PARAM_ONOFF, true)
+			Config.ads:addParam("dm", "Damage Manager", SCRIPT_PARAM_ONOFF, true)
 
-		ConfigY:addSubMenu("draw", "draw")
-			ConfigY.draw:addParam("drawq", "draw Q", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.draw:addParam("draww", "draw W", SCRIPT_PARAM_ONOFF, true)
-			ConfigY.draw:addParam("drawe", "draw E", SCRIPT_PARAM_ONOFF, true)
+		Config:addSubMenu("draw", "draw")
+			Config.draw:addParam("drawq", "draw Q", SCRIPT_PARAM_ONOFF, true)
+			Config.draw:addParam("draww", "draw W", SCRIPT_PARAM_ONOFF, true)
+			Config.draw:addParam("drawe", "draw E", SCRIPT_PARAM_ONOFF, true)
+			Config.draw:addParam("KillMarkX", "KillMark X ", SCRIPT_PARAM_SLICE, 100, 0, WINDOW_W, 0)
+			Config.draw:addParam("KillMarkY", "KillMark Y ", SCRIPT_PARAM_SLICE, 100, 0, WINDOW_H, 0)
 		
 		if SxOLoad then
-			ConfigY:addSubMenu("orbWalk", "orbWalk")
-				SxO:LoadToMenu(ConfigY.orbWalk)
+			Config:addSubMenu("orbWalk", "orbWalk")
+				SxO:LoadToMenu(Config.orbWalk)
 		end
+end
+
+function Setting()
+	if not TwistedTreeline then
+		JungleMobNames = {
+			["SRU_MurkwolfMini2.1.3"]	= true,
+			["SRU_MurkwolfMini2.1.2"]	= true,
+			["SRU_MurkwolfMini8.1.3"]	= true,
+			["SRU_MurkwolfMini8.1.2"]	= true,
+			["SRU_BlueMini1.1.2"]		= true,
+			["SRU_BlueMini7.1.2"]		= true,
+			["SRU_BlueMini21.1.3"]		= true,
+			["SRU_BlueMini27.1.3"]		= true,
+			["SRU_RedMini10.1.2"]		= true,
+			["SRU_RedMini10.1.3"]		= true,
+			["SRU_RedMini4.1.2"]		= true,
+			["SRU_RedMini4.1.3"]		= true,
+			["SRU_KrugMini11.1.1"]		= true,
+			["SRU_KrugMini5.1.1"]		= true,
+			["SRU_RazorbeakMini9.1.2"]	= true,
+			["SRU_RazorbeakMini9.1.3"]	= true,
+			["SRU_RazorbeakMini9.1.4"]	= true,
+			["SRU_RazorbeakMini3.1.2"]	= true,
+			["SRU_RazorbeakMini3.1.3"]	= true,
+			["SRU_RazorbeakMini3.1.4"]	= true
+		}
+
+		FocusJungleNames = {
+			["SRU_Blue1.1.1"]			= true,
+			["SRU_Blue7.1.1"]			= true,
+			["SRU_Murkwolf2.1.1"]		= true,
+			["SRU_Murkwolf8.1.1"]		= true,
+			["SRU_Gromp13.1.1"]			= true,
+			["SRU_Gromp14.1.1"]			= true,
+			["Sru_Crab16.1.1"]			= true,
+			["Sru_Crab15.1.1"]			= true,
+			["SRU_Red10.1.1"]			= true,
+			["SRU_Red4.1.1"]			= true,
+			["SRU_Krug11.1.2"]			= true,
+			["SRU_Krug5.1.2"]			= true,
+			["SRU_Razorbeak9.1.1"]		= true,
+			["SRU_Razorbeak3.1.1"]		= true,
+			["SRU_Dragon6.1.1"]			= true,
+			["SRU_Baron12.1.1"]			= true
+		}
+	else
+		FocusJungleNames = {
+			["TT_NWraith1.1.1"]			= true,
+			["TT_NGolem2.1.1"]			= true,
+			["TT_NWolf3.1.1"]			= true,
+			["TT_NWraith4.1.1"]			= true,
+			["TT_NGolem5.1.1"]			= true,
+			["TT_NWolf6.1.1"]			= true,
+			["TT_Spiderboss8.1.1"]		= true
+		}
+		JungleMobNames = {
+			["TT_NWraith21.1.2"]		= true,
+			["TT_NWraith21.1.3"]		= true,
+			["TT_NGolem22.1.2"]			= true,
+			["TT_NWolf23.1.2"]			= true,
+			["TT_NWolf23.1.3"]			= true,
+			["TT_NWraith24.1.2"]		= true,
+			["TT_NWraith24.1.3"]		= true,
+			["TT_NGolem25.1.1"]			= true,
+			["TT_NWolf26.1.2"]			= true,
+			["TT_NWolf26.1.3"]			= true
+		}
+	end
+	_JungleMobs = minionManager(MINION_JUNGLE, Qrange, myHero, MINION_SORT_MAXHEALTH_DEC)
 end
 
 function GetHPBarPos(enemy)
@@ -304,125 +414,102 @@ function GetHPBarPos(enemy)
 end
 
 function initialize()
-		for i = 1, heroManager.iCount do
-			local hero = heroManager:GetHero(i)
-			if hero.team ~= myHero.team then enemyChamps[""..hero.networkID] = DPTarget(hero)
-				enemyChampsCount = enemyChampsCount + 1
-			end
+	for i = 1, heroManager.iCount do
+		local hero = heroManager:GetHero(i)
+		if hero.team ~= myHero.team then enemyChamps[""..hero.networkID] = DPTarget(hero)
+			enemyChampsCount = enemyChampsCount + 1
 		end
-	end
-
-function OnTick()
-	if myHero.dead then return end
-	OnCombo()
-	OnHarass()
-	OnSpellcheck()
-	Farm()
-	if CountEnemyHeroInRange(eRange) == 0 and EActive == true and Eready and ConfigY.ads.autoff then
-		CastSpell(_E)
-	end
-	if dead then
-		PassiveActive()
 	end
 end
 
+function OnTick()
+	if myHero.dead then return end
+	if Config.combo.activecombo then OnCombo() end
+	if Config.harass.harasstoggle and recall == false or Config.harass.harassactive and recall == false then OnHarass() end
+	OnSpellcheck()
+	if Config.farm.farm then Farm() end
+	if Config.Clear.ClearActice then Clear() end
+	if CountEnemyHeroInRange(Erange) == 0 and EActive == true and Eready and Config.ads.autoff then CastSpell(_E) end
+	if dead then PassiveActive() end
+end
+
 function PassiveActive()
-	ts:update()
-	if ts.target ~= nil and ConfigY.ads.pa then
-		if ConfigY.pred.choose == 1 then
-			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(ts.target, 0.5, 75, 875, 1700, player)
-			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.target.dead == false then
-				if Qready and ConfigY.combo.useq then
-					CastSpell(_Q, CastPosition.x, CastPosition.z)
-				end
-			end
-		elseif ConfigY.pred.choose == 2 then
-			local Target = DPTarget(ts.target)
-			local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,945,75,600,math.huge))
-			if state == SkillShot.STATUS.SUCCESS_HIT then
-				CastSpell(_Q,hitPos.x,hitPos.z)
-			end
-		end
-		if ConfigY.pred.choose == 1 then
-			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 10, 1000)
-			if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
-				if Wready and ConfigY.combo.usew then
-					CastSpell(_W, CastPosition.x, CastPosition.z)
-				end
-			end
-		elseif ConfigY.pred.choose == 2 then
-			local Target = DPTarget(ts.target)
-			local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,1000,10,160,math.huge))
-			if state == SkillShot.STATUS.SUCCESS_HIT then
-				CastSpell(_W,hitPos.x,hitPos.z)
-			end
-		end
+	local target = STS:GetTarget(Qrange)
+	if target ~= nil and Config.ads.pa then
+		CastQ(target)
+		CastW(target)
 	end
 end
 
 function OnCombo()
-	ts:update()
-	if ts.target ~= nil then
-		if ConfigY.combo.activecombo then
-			if ConfigY.pred.choose == 1 and ConfigY.combo.useq then
-				local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(ts.target, 0.5, 75, 875, 1700, player)
-				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.target.dead == false then
-					if Qready and ConfigY.combo.useq then
-						CastSpell(_Q, CastPosition.x, CastPosition.z)
-					end
-				end
-			elseif ConfigY.pred.choose == 2 and ConfigY.combo.useq then
-				local Target = DPTarget(ts.target)
-				local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,945,75,600,math.huge))
-				if state == SkillShot.STATUS.SUCCESS_HIT then
-					CastSpell(_Q,hitPos.x,hitPos.z)
-				end
+	local target = STS:GetTarget(Qrange)
+	if target ~= nil then
+		if Config.combo.useq then CastQ(target) end
+		if Config.combo.usew then CastW(target) end
+		if Config.combo.usee then CastE() end
+	end
+end
+
+function OnHarass()
+	local target = STS:GetTarget(Qrange)
+	if target ~= nil then
+		if Config.harass.useq then CastQ(target) end
+		if Config.harass.usee then CastE() end
+	end
+end
+
+function CastQ( target )
+	if Qready then
+		if Config.pred.choose == 1 then
+			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(target, 0.5, 75, 875, 1700, player)
+			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and target.dead == false then
+				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
-			if ConfigY.pred.choose == 1 and ConfigY.combo.usew then
-				local CastPosition, HitChance, Position = VP:GetCircularCastPosition(ts.target, 0.5, 10, 1000)
-				if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
-					if Wready and ConfigY.combo.usew then
-						CastSpell(_W, CastPosition.x, CastPosition.z)
-					end
-				end
-			elseif ConfigY.pred.choose == 2 and ConfigY.combo.usew then
-				local Target = DPTarget(ts.target)
-				local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,1000,10,160,math.huge))
-					if state == SkillShot.STATUS.SUCCESS_HIT  then
-						CastSpell(_W,hitPos.x,hitPos.z)
-					end
+		elseif Config.pred.choose == 2 and Config.combo.useq then
+			local Target = DPTarget(target)
+			local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,945,75,600,math.huge))
+			if state == SkillShot.STATUS.SUCCESS_HIT then
+				CastSpell(_Q,hitPos.x,hitPos.z)
 			end
-			if CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana >= (myHero.maxMana*(ConfigY.combo.pere*0.01)) and ConfigY.combo.usee then
-				CastSpell(_E)
+		elseif Config.pred.choose == 3 then
+			local Pos, HPHitChance = HPred:GetPredict("Q", target, myHero)
+			if hitchance >= 2 then
+			  CastSpell(_Q, Pos.x, Pos.z)
 			end
 		end
 	end
 end
 
-function OnHarass()
-	if ConfigY.harass.harasstoggle and recall == false or ConfigY.harass.harassactive then
-		ts:update()
-		if ts.target ~= nil then
-			if ConfigY.pred.choose == 1 then
-				local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(ts.target, 0.5, 75, 875, 1700, player)
-				if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and ts.target.dead == false then
-					if Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
-						CastSpell(_Q, CastPosition.x, CastPosition.z)
-					end
-				end
-			elseif ConfigY.pred.choose == 2 then
-				local Target = DPTarget(ts.target)
-				local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,945,75,600,math.huge))
-				if state == SkillShot.STATUS.SUCCESS_HIT and Qready and ConfigY.harass.useq and myHero.mana > (myHero.maxMana*(ConfigY.harass.perq*0.01)) then
-					CastSpell(_Q,hitPos.x,hitPos.z)
-				end
+function CastW( target )
+	if Wready then
+		if Config.pred.choose == 1 then
+			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, 0.5, 10, 1000)
+			if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
+				CastSpell(_W, CastPosition.x, CastPosition.z)
 			end
-			if ConfigY.harass.usee and CountEnemyHeroInRange(eRange) >= 1 and EActive == false and Eready and myHero.mana >= (myHero.maxMana*(ConfigY.harass.pere*0.01)) then
-				CastSpell(_E)
+		elseif Config.pred.choose == 2 then
+			local Target = DPTarget(target)
+			local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,1000,10,160,math.huge))
+			if state == SkillShot.STATUS.SUCCESS_HIT then
+				CastSpell(_W,hitPos.x,hitPos.z)
+			end
+		elseif Config.pred.choose == 3 then
+			local Pos, HitChance = HPred:GetPredict("W", target, myHero)
+			if hitchance >= 2 then
+				CastSpell(_W, Pos.x, Pos.z)
 			end
 		end
 	end
 end
+
+function CastE()
+	if CountEnemyHeroInRange(Erange) >= 1 and not EActive then
+		CastSpell(_E)
+	elseif CountEnemyHeroInRange(Erange) == 0 and EActive then
+		CastSpell(_E)
+	end
+end
+
 
 function OnSpellcheck()
 	if myHero:CanUseSpell(_Q) == READY then
@@ -451,26 +538,26 @@ function OnSpellcheck()
 end
 
 function OnDraw()
-	if ConfigY.draw.drawq then
+	if Config.draw.drawq then
 		DrawCircle(myHero.x, myHero.y, myHero.z, 875, 0xFFFFCC)
 	end
-	if ConfigY.draw.draww then
+	if Config.draw.draww then
 		DrawCircle(myHero.x, myHero.y, myHero.z, 1000, 0xFFFF0000)
 	end
-	if ConfigY.draw.drawe then
+	if Config.draw.drawe then
 		DrawCircle(myHero.x, myHero.y, myHero.z, 475, 0xFFFFFFff)
 	end
-	if ConfigY.killsteal.killstealmark then
+	if Config.killsteal.killstealmark then
 		for j, CanKillChampion in pairs(EnemyHeroes) do
 			if stat(CanKillChampion) == "Can" then
-				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, 100, 100+j*20, 0xFFFF0000)
+				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, Config.draw.KillMarkX, Config.draw.KillMarkY+j*20, 0xFFFF0000)
 			elseif stat(CanKillChampion) == "Cant" or stat(CanKillChampion) == "dead" then
-				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, 100, 100+j*20, 0xFFFFFF00)
+				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, Config.draw.KillMarkX, Config.draw.KillMarkY+j*20, 0xFFFFFF00)
 			end
 		end
 	end
 	for i, j in ipairs(GetEnemyHeroes()) do
-		if GetDistance(j) < 2000 and not j.dead and ConfigY.ads.dm then
+		if GetDistance(j) < 2000 and not j.dead and Config.ads.dm and ValidTarget(j) then
 			local pos = GetHPBarPos(j)
 			local dmg, Qdamage = GetSpellDmg(j)
 			if dmg == "CanComboKill" then
@@ -512,27 +599,70 @@ function stat(unit)
 end
 
 function Farm()
-	if ConfigY.farm.farm then
-		enemyMinions:update()
-		for i, minion in ipairs(enemyMinions.objects) do
-			if GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero)*0.75 > minion.health and ConfigY.farm.useq then
-				if ConfigY.pred.choose == 1 then
-					local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(minion, 0.5, 75, 875, 1700, player)
-					if CastPosition and HitChance >= 2 then
-						if Qready then
-							CastSpell(_Q, CastPosition.x, CastPosition.z)
-						end
-					end
-				elseif ConfigY.pred.choose == 2 then
-					local Target = DPTarget(minion)
-					local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,845,75,600,math.huge))
-					if state == SkillShot.STATUS.SUCCESS_HIT then
-						CastSpell(_Q,hitPos.x,hitPos.z)
-					end
-				end
+	enemyMinions:update()
+	for i, minion in ipairs(enemyMinions.objects) do
+		if GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero)*0.75 > minion.health and Config.farm.useq then
+			CastQ(minion)
+		end
+	end
+end
+
+function Clear()
+	_JungleMobs:update()
+	for i, minion in pairs(_JungleMobs.objects) do
+		if minion ~= nil and not minion.dead and GetDistance(minion) < 975 and Config.Clear.UseQ and player.mana > (player.maxMana*(Config.Clear.perq*0.01)) then
+			local bestpos, besthit = GetBestCircularFarmPosition(875, 75, _JungleMobs.objects)
+			if bestpos ~= nil then
+				CastSpell(_Q, bestpos.x, bestpos.z)
 			end
 		end
 	end
+	enemyMinions:update()
+	for i, minion in pairs(enemyMinions.objects) do
+		if minion ~= nil and not minion.dead and GetDistance(minion) < 975 and Config.Clear.UseQ and player.mana > (player.maxMana*(Config.Clear.perq*0.01)) then
+			local bestpos, besthit = GetBestCircularFarmPosition(875, 75, enemyMinions.objects)
+			if bestpos ~= nil then
+				CastSpell(_Q, bestpos.x, bestpos.z)
+			end
+		end
+	end
+end
+
+function GetBestCircularFarmPosition(range, radius, objects)
+    local BestPos 
+    local BestHit = 0
+    for i, object in ipairs(objects) do
+        local hit = CountObjectsNearPos(object.pos or object, range, radius, objects)
+        if hit > BestHit then
+            BestHit = hit
+            BestPos = Vector(object)
+            if BestHit == #objects then
+               break
+            end
+         end
+    end
+    return BestPos, BestHit
+end
+
+function CountObjectsOnLineSegment(StartPos, EndPos, width, objects)
+    local n = 0
+    for i, object in ipairs(objects) do
+        local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(StartPos, EndPos, object)
+        if isOnSegment and GetDistanceSqr(pointSegment, object) < width * width then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+function CountObjectsNearPos(pos, range, radius, objects)
+    local n = 0
+    for i, object in ipairs(objects) do
+        if GetDistanceSqr(pos, object) <= radius * radius then
+            n = n + 1
+        end
+    end
+    return n
 end
 
 function OnApplyBuff(source, unit, buff)
