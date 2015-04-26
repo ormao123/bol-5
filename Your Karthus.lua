@@ -113,11 +113,17 @@ Fix Q, W, E
 
 Optimization
 
+
+v. 1.31
+
+Add Your Prediction Loader
+
+More Perfectly Q Farming
 ]]
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.30
+local version = 1.31
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -177,9 +183,10 @@ end
 
 local Qrange = 875
 local Wrange = 1000
-local Erange = 425
+local Erange = 550
 
 local Qready, Wready, Eready, Rready = nil, nil, nil, nil
+local VPLoad, DPLoad, HPLoad = false, false, false
 local useingE = false
 local EActive = false
 local recall = false
@@ -196,6 +203,37 @@ local EnemyHeroes = GetEnemyHeroes()
 --require "SxOrbWalk"
 require "SourceLib"
 
+local Prediction = {}
+
+class('Predloader')
+function Predloader:__init()
+end
+
+function Predloader:Msg(msg) print("<font color=\"#6699ff\"><b>Your PredLoader:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+
+function Predloader:LoadPred()
+	if FileExist(LIB_PATH.."VPrediction.lua") then
+		self:Msg("VPrediction Found Now support VPrediction")
+		require "VPrediction"
+		table.insert(Prediction, "VPrediction")
+		VP = VPrediction()
+		VPLoad = true
+	end
+	if FileExist(LIB_PATH.."DivinePred.lua") and FileExist(LIB_PATH.."DivinePred.luac") then
+		self:Msg("DivinePred Found Now support DivinePred")
+		require "DivinePred"
+		table.insert(Prediction, "DivinePred")
+		dp = DivinePred()
+		DPLoad = true
+	end
+	if FileExist(LIB_PATH.."HPrediction.lua") then
+		self:Msg("HPrediction Found Now support HPrediction")
+		require "HPrediction"
+		table.insert(Prediction, "HPrediction")
+		HPred = HPrediction()
+		HPLoad = true
+	end
+end
 
 
 local enemyChamps = {}
@@ -227,27 +265,28 @@ end
 
 function OnLoad()
 
+	PL = Predloader()
 	OnOrbLoad()
-	
+	PL:LoadPred()
 	STS = SimpleTS()
-	VP = VPrediction()
-	dp = DivinePred()
+
 	if SxOLoad then SxO:DisableAttacks() end
-	
-	HPred = HPrediction()
-	-- Q
-	Spell_Q.delay['Karthus'] = 1
-	Spell_Q.radius['Karthus'] = 150
-	Spell_Q.range['Karthus'] = 875
-	Spell_Q.type['Karthus'] = "PromptCircle"
-	
-	-- W
-	Spell_W.collisionM['Karthus'] = false
-	Spell_W.collisionH['Karthus'] = false
-	Spell_W.delay['Karthus'] = 0.25
-	Spell_W.range['Karthus'] = 1000
-	Spell_W.type['Karthus'] = "DelayLine"
-	Spell_W.width['Karthus'] = 500
+
+	if HPLoad then
+		-- Q
+		Spell_Q.delay['Karthus'] = 0.75
+		Spell_Q.radius['Karthus'] = 200
+		Spell_Q.range['Karthus'] = 875
+		Spell_Q.type['Karthus'] = "PromptCircle"
+		
+		-- W
+		Spell_W.collisionM['Karthus'] = false
+		Spell_W.collisionH['Karthus'] = false
+		Spell_W.delay['Karthus'] = 0.25
+		Spell_W.range['Karthus'] = 1000
+		Spell_W.type['Karthus'] = "DelayLine"
+		Spell_W.width['Karthus'] = 500
+	end
   
 	
 	if GetGame().map.shortName == "twistedTreeline" then
@@ -262,7 +301,7 @@ function OnLoad()
 	initialize()
 
 
-	enemyMinions = minionManager(MINION_ENEMY, 875, myHero, MINION_SORT_MAXHEALTH_DEC)
+	enemyMinions = minionManager(MINION_ENEMY, 975, myHero, MINION_SORT_MAXHEALTH_DEC)
 
 end
 
@@ -299,7 +338,7 @@ function LoadMenu()
 			Config.Clear:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 
 		Config:addSubMenu("Prediction", "pred")
-			Config.pred:addParam("choose", "Chooes Type", SCRIPT_PARAM_LIST, 1, {"VPrediction", "DivinePred" })
+			Config.pred:addParam("choose", "Chooes Type", SCRIPT_PARAM_LIST, 1, {"VPrediction", "DivinePred", "HPrediction" })
 
 		Config:addSubMenu("killsteal", "killsteal")
 			Config.killsteal:addParam("killstealmark", "Killsteal Mark", SCRIPT_PARAM_ONOFF, true)
@@ -391,7 +430,7 @@ function Setting()
 			["TT_NWolf26.1.3"]			= true
 		}
 	end
-	_JungleMobs = minionManager(MINION_JUNGLE, Qrange, myHero, MINION_SORT_MAXHEALTH_DEC)
+	_JungleMobs = minionManager(MINION_JUNGLE, Qrange+100, myHero, MINION_SORT_MAXHEALTH_DEC)
 end
 
 function GetHPBarPos(enemy)
@@ -460,20 +499,20 @@ end
 
 function CastQ( target )
 	if Qready then
-		if Config.pred.choose == 1 then
-			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(target, 0.5, 75, 875, 1700, player)
+		if Prediction[Config.pred.choose] == "VPrediction" then
+			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(target, 0.75, 200, 875, 1700, player)
 			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and target.dead == false then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
-		elseif Config.pred.choose == 2 and Config.combo.useq then
+		elseif Prediction[Config.pred.choose] == "DivinePred" and Config.combo.useq then
 			local Target = DPTarget(target)
-			local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,945,75,600,math.huge))
+			local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,875,200,600,math.huge))
 			if state == SkillShot.STATUS.SUCCESS_HIT then
 				CastSpell(_Q,hitPos.x,hitPos.z)
 			end
-		elseif Config.pred.choose == 3 then
+		elseif Prediction[Config.pred.choose] == "HPrediction" then
 			local Pos, HPHitChance = HPred:GetPredict("Q", target, myHero)
-			if hitchance >= 2 then
+			if HPHitChance ~= 0 then
 			  CastSpell(_Q, Pos.x, Pos.z)
 			end
 		end
@@ -482,20 +521,20 @@ end
 
 function CastW( target )
 	if Wready then
-		if Config.pred.choose == 1 then
+		if Prediction[Config.pred.choose] == "VPrediction" then
 			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, 0.5, 10, 1000)
 			if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
 				CastSpell(_W, CastPosition.x, CastPosition.z)
 			end
-		elseif Config.pred.choose == 2 then
+		elseif Prediction[Config.pred.choose] == "DivinePred" then
 			local Target = DPTarget(target)
 			local state,hitPos,perc = dp:predict(Target,CircleSS(math.huge,1000,10,160,math.huge))
 			if state == SkillShot.STATUS.SUCCESS_HIT then
 				CastSpell(_W,hitPos.x,hitPos.z)
 			end
-		elseif Config.pred.choose == 3 then
+		elseif Prediction[Config.pred.choose] == "HPrediction" then
 			local Pos, HitChance = HPred:GetPredict("W", target, myHero)
-			if hitchance >= 2 then
+			if HitChance ~= 0 then
 				CastSpell(_W, Pos.x, Pos.z)
 			end
 		end
@@ -601,8 +640,17 @@ end
 function Farm()
 	enemyMinions:update()
 	for i, minion in ipairs(enemyMinions.objects) do
-		if GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and getDmg("Q", minion, myHero)*0.75 > minion.health and Config.farm.useq then
-			CastQ(minion)
+		if GetDistance(minion) <= 875 and myHero:CanUseSpell(_Q) == READY and Config.farm.useq then
+			local bestpos, besthit = GetBestCircularFarmPosition(875, 200, enemyMinions.objects)
+			if besthit == 1 then
+				if getDmg("Q", minion, myHero) > minion.health then
+					CastQ(minion)
+				end
+			elseif besthit > 1 then
+				if getDmg("Q", minion, myHero)*0.5 > minion.health then
+					CastQ(minion)
+				end
+			end
 		end
 	end
 end
@@ -611,7 +659,7 @@ function Clear()
 	_JungleMobs:update()
 	for i, minion in pairs(_JungleMobs.objects) do
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 975 and Config.Clear.UseQ and player.mana > (player.maxMana*(Config.Clear.perq*0.01)) then
-			local bestpos, besthit = GetBestCircularFarmPosition(875, 75, _JungleMobs.objects)
+			local bestpos, besthit = GetBestCircularFarmPosition(875, 200, _JungleMobs.objects)
 			if bestpos ~= nil then
 				CastSpell(_Q, bestpos.x, bestpos.z)
 			end
@@ -620,7 +668,7 @@ function Clear()
 	enemyMinions:update()
 	for i, minion in pairs(enemyMinions.objects) do
 		if minion ~= nil and not minion.dead and GetDistance(minion) < 975 and Config.Clear.UseQ and player.mana > (player.maxMana*(Config.Clear.perq*0.01)) then
-			local bestpos, besthit = GetBestCircularFarmPosition(875, 75, enemyMinions.objects)
+			local bestpos, besthit = GetBestCircularFarmPosition(875, 200, enemyMinions.objects)
 			if bestpos ~= nil then
 				CastSpell(_Q, bestpos.x, bestpos.z)
 			end
