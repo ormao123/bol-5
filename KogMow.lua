@@ -55,7 +55,7 @@ local W = {Range = DefultAARange+(110+20*player:GetSpellData(_E).level), IsReady
 local E = {Range = 1200, Width = 120, Delay = 0.5, Speed = 1200, IsReady = player:CanUseSpell(_E) == READY,};
 local R = {Range = 900+(300*player:GetSpellData(_R).level), Delay = 1.1, Width = 225, Speed = math.huge, IsReady = player:CanUseSpell(_R) == READY, };
 
-local VPload , DPLoad, HPLoad = false, false, false;
+local VPload , DPLoad, HPLoad = true, false, false;
 local RMana = player:GetSpellData(_R).mana
 local Next_Cast_time = 0;
 
