@@ -6,11 +6,11 @@ end
 
 
 local Author = "Your"
-local Version = "0.1"
+local Version = "0.2"
 
 local SCRIPT_INFO = {
 	["Name"] = "APLD KogMaw",
-	["Version"] = 0.1,
+	["Version"] = 0.2,
 	["Author"] = {
 		["Your"] = "http://forum.botoflegends.com/user/145247-"
 	},
@@ -20,7 +20,7 @@ local SCRIPT_UPDATER = {
 	["Script"] = SCRIPT_PATH..GetCurrentEnv().FILE_NAME,
 	["URL_HOST"] = "raw.github.com",
 	["URL_PATH"] = "/jineyne/bol/master/APLD/APLD KogMaw/APLD KogMaw.lua",
-	["URL_VERSION"] = "/jineyne/bol/master/APLD/version/APLD KogMaw/APLD KogMaw.version"
+	["URL_VERSION"] = "/jineyne/bol/master/APLD/APLD KogMaw/version/APLD KogMaw.version"
 }
 local SCRIPT_LIBS = {
 	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
@@ -290,9 +290,9 @@ function OnMenuLoad()
 		
 	Config:addSubMenu("Prediction", "pred")
 		Config.pred:addSubMenu("HPSetting", "HPSetting")
-			Config.pred.HPSetting:addParam("QHitChance", "QHitChance", SCRIPT_PARAM_SLICE, 2, 0, 3, 0);
-			Config.pred.HPSetting:addParam("EHitChance", "EHitChance", SCRIPT_PARAM_SLICE, 2, 0, 3, 0);
-			Config.pred.HPSetting:addParam("RHitChance", "RHitChance", SCRIPT_PARAM_SLICE, 1, 0, 3, 0);
+			Config.pred.HPSetting:addParam("QHitChance", "QHitChance", SCRIPT_PARAM_SLICE, 1, 0.1, 3, 0);
+			Config.pred.HPSetting:addParam("EHitChance", "EHitChance", SCRIPT_PARAM_SLICE, 1, 0.1, 3, 0);
+			Config.pred.HPSetting:addParam("RHitChance", "RHitChance", SCRIPT_PARAM_SLICE, 1, 0.1, 3, 0);
 
 	Config:addSubMenu("ETC", "ETC")
 		--Config.ETC:addParam("DamageManager", "DamageManager", SCRIPT_PARAM_ONOFF, true);
@@ -324,7 +324,7 @@ function OnMenuLoad()
 		Config.RSetting:addParam("RKSDelay", "Use RKS Delay", SCRIPT_PARAM_ONOFF, true)
 		
 	Config:addSubMenu("Developer", "Developer")
-		Config.Developer:addParam("Debug", "Debug", SCRIPT_PARAM_ONOFF, true)
+		Config.Developer:addParam("Debug", "Debug", SCRIPT_PARAM_ONOFF, false)
 		
 	Config:addParam("INFO", "", SCRIPT_PARAM_INFO, "")
 	Config:addParam("Version", "Version", SCRIPT_PARAM_INFO, Version)
@@ -374,11 +374,11 @@ function OnDraw()
 	if Config.ETC.TargetMark then
 		local t = OrbTarget(R.Range)
 		if t~= nil then
-			DrawCircle(t.x, t.y, t.z, t.minBBox, TARGB(Config.ETC.TMColor))
+			DrawCircle(t.x, t.y, t.z, GetDistance(t.minBBox)/2, TARGB(Config.ETC.TMColor))
 		end
 	end
 	
-	if Config.Debug then
+	if Config.Developer.Debug then
 		DrawText(_RMana[KogMawRStack.Stack], 18, 100, 100, 0xffff0000)
 		DrawText(tostring(KogMawRStack.LastCastTime), 18, 100, 125, 0xffff0000)
 		DrawText(tostring(os.clock()), 18, 100, 150, 0xffff0000)
@@ -448,9 +448,11 @@ end
 function OnKillSteal()
 	if player.dead then return end
 	local Kt = OrbTarget(R.Range)
-	for i, enemy in ipairs(GetEnemyHeroes()) do
-		if Config.KillSteal.CastE and getDmg("E", enemy, player) and E.IsReady() and GetDistance(enemy, player) <= E.Range then CastE(Kt) end
-		if Config.KillSteal.CastR and getDmg("R", enemy, player) and R.IsReady() and GetDistance(enemy, player) <= R.Range then CastR(Kt) end
+	if Kt ~= nil then
+		for i, enemy in ipairs(GetEnemyHeroes()) do
+			if Config.KillSteal.UseE and getDmg("E", enemy, player) >= enemy.health and E.IsReady() and GetDistance(enemy, player) <= E.Range then CastE(Kt) end
+			if Config.KillSteal.UseR and getDmg("R", enemy, player) >= enemy.health and R.IsReady() and GetDistance(enemy, player) <= R.Range then CastR(Kt) end
+		end
 	end
 end
 
@@ -505,7 +507,6 @@ function CastRDelay()
 	local delay = RDelay()
 	if Next_Cast_time == 0 and R.IsReady() then
 		Next_Cast_time = os.clock() + (delay*0.01)
-		print(Next_Cast_time)
 	end
 end
 
