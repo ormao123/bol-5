@@ -10,7 +10,7 @@ local Version = "0.1"
 
 local SCRIPT_INFO = {
 	["Name"] = "APLD KogMaw",
-	["Version"] = 1.0,
+	["Version"] = 0.1,
 	["Author"] = {
 		["Your"] = "http://forum.botoflegends.com/user/145247-"
 	},
@@ -19,8 +19,8 @@ local SCRIPT_UPDATER = {
 	["Activate"] = true,
 	["Script"] = SCRIPT_PATH..GetCurrentEnv().FILE_NAME,
 	["URL_HOST"] = "raw.github.com",
-	["URL_PATH"] = "/jineyne/",
-	["URL_VERSION"] = "/jineyne/"
+	["URL_PATH"] = "/jineyne/bol/master/APLD/APLD KogMaw/APLD KogMaw.lua",
+	["URL_VERSION"] = "/jineyne/bol/master/APLD/version/APLD KogMaw/APLD KogMaw.version"
 }
 local SCRIPT_LIBS = {
 	["SourceLib"] = "https://raw.github.com/LegendBot/Scripts/master/Common/SourceLib.lua",
