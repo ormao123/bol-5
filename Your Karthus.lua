@@ -123,7 +123,7 @@ More Perfectly Q Farming
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.31
+local version = 1.32
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -274,19 +274,8 @@ function OnLoad()
 	if SxOLoad then SxO:DisableAttacks() end
 
 	if HPLoad then
-		-- Q
-		Spell_Q.delay['Karthus'] = 0.75
-		Spell_Q.radius['Karthus'] = 200
-		Spell_Q.range['Karthus'] = 875
-		Spell_Q.type['Karthus'] = "PromptCircle"
-		
-		-- W
-		Spell_W.collisionM['Karthus'] = false
-		Spell_W.collisionH['Karthus'] = false
-		Spell_W.delay['Karthus'] = 0.25
-		Spell_W.range['Karthus'] = 1000
-		Spell_W.type['Karthus'] = "DelayLine"
-		Spell_W.width['Karthus'] = 500
+		HPred:AddSpell("Q", 'Karthus', {type = "PromptCircle", range = 875, delay = 0.75, radius = 200})
+		HPred:AddSpell("W", 'Karthus', {collisionM = false, collisionH = false, type = "DelayLine", range = 100, delay = 0.25, width = 10})
 	end
   
 	
