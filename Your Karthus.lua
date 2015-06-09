@@ -119,12 +119,16 @@ v. 1.31
 Add Your Prediction Loader
 
 More Perfectly Q Farming
+
+v. 1.33
+Add AA block you can chose only combo mode
+Add E exploit
 ]]
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.32
-local AUTO_UPDATE = true
+local version = 1.33
+local AUTO_UPDATE = false
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH.."Your Karthus.lua"
@@ -202,7 +206,7 @@ local VP, SxO, dp = nil, nil, nil
 local EnemyHeroes = GetEnemyHeroes()
 
 --require "SxOrbWalk"
-require "SourceLib"
+--require "SourceLib"
 
 local Prediction = {}
 
@@ -253,6 +257,7 @@ function OnOrbLoad()
 			RevampedLoaded = true
 		end
 	elseif _G.Reborn_Loaded then
+		SacLoad = true
 		DelayAction(OnOrbLoad, 1)
 	elseif FileExist(LIB_PATH .. "SxOrbWalk.lua") then
 		AutoupdaterMsg("SxOrbWalk Load")
@@ -262,8 +267,6 @@ function OnOrbLoad()
 	end
 end
 
-
-
 function OnLoad()
 
 	PL = Predloader()
@@ -271,13 +274,12 @@ function OnLoad()
 	PL:LoadPred()
 	STS = SimpleTS()
 
-	if SxOLoad then SxO:DisableAttacks() end
-
+	--[[
 	if HPLoad then
 		HPred:AddSpell("Q", 'Karthus', {type = "PromptCircle", range = 875, delay = 0.75, radius = 200})
 		HPred:AddSpell("W", 'Karthus', {collisionM = false, collisionH = false, type = "DelayLine", range = 100, delay = 0.25, width = 10})
 	end
-  
+	]]
 	
 	if GetGame().map.shortName == "twistedTreeline" then
 		TwistedTreeline = true
@@ -292,7 +294,6 @@ function OnLoad()
 
 
 	enemyMinions = minionManager(MINION_ENEMY, 975, myHero, MINION_SORT_MAXHEALTH_DEC)
-
 end
 
 function LoadMenu()
@@ -305,6 +306,7 @@ function LoadMenu()
 			Config.combo:addParam("activecombo", "combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
 			Config.combo:addParam("useq", "use Q", SCRIPT_PARAM_ONOFF, true)
 			Config.combo:addParam("usew", "use W", SCRIPT_PARAM_ONOFF, true)
+			Config.combo:addParam("UseWinQrange", "Use W in Q range", SCRIPT_PARAM_ONOFF, true)
 			Config.combo:addParam("usee", "use E", SCRIPT_PARAM_ONOFF, true)
 			Config.combo:addParam("pere", "Until % use W", SCRIPT_PARAM_SLICE, 0, 0, 100, 0)
 
@@ -328,18 +330,21 @@ function LoadMenu()
 			Config.Clear:addParam("perq", "Until % Q", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
 
 		Config:addSubMenu("Prediction", "pred")
-			Config.pred:addParam("choose", "Chooes Type", SCRIPT_PARAM_LIST, 1, {"VPrediction", "DivinePred", "HPrediction" })
+			Config.pred:addParam("choose", "Chooes Type", SCRIPT_PARAM_LIST, 1, Prediction)
 
 		Config:addSubMenu("killsteal", "killsteal")
 			Config.killsteal:addParam("killstealmark", "Killsteal Mark", SCRIPT_PARAM_ONOFF, true)
 			--Config.killsteal:addParam("killstealq", "Killsteal Q Toggle", SCRIPT_PARAM_ONOFF, true)
 			--Config.killsteal:addParam("killstealhitchance", "Killsteal hit chance", SCRIPT_PARAM_LIST, 1, {"1", "2", "3", "4", "5"})
 
-		Config:addSubMenu("ads", "ads")
+		Config:addSubMenu("Misc", "ads")
 			--Config.ads:addParam("adsr", "Use R After You dead", SCRIPT_PARAM_ONOFF, true)
+			Config.ads:addParam("CastEeverytime", "Cast E every time", SCRIPT_PARAM_ONOFF, true)
 			Config.ads:addParam("autoff", "E Auto Off", SCRIPT_PARAM_ONOFF, true)
 			Config.ads:addParam("pa", "Passive Active Auto Attack", SCRIPT_PARAM_ONOFF, true)
 			Config.ads:addParam("dm", "Damage Manager", SCRIPT_PARAM_ONOFF, true)
+			Config.ads:addParam("BlockAautoattack","Block Auto attack", SCRIPT_PARAM_ONOFF, false)
+			Config.ads:addParam("BlockAttackOnCombo", "Block Attack On combo", SCRIPT_PARAM_ONOFF, true)
 
 		Config:addSubMenu("draw", "draw")
 			Config.draw:addParam("drawq", "draw Q", SCRIPT_PARAM_ONOFF, true)
@@ -454,12 +459,34 @@ end
 function OnTick()
 	if myHero.dead then return end
 	if Config.combo.activecombo then OnCombo() end
-	if Config.harass.harasstoggle and recall == false or Config.harass.harassactive and recall == false then OnHarass() end
+	if (Config.harass.harasstoggle and recall == false) or (Config.harass.harassactive and recall == false) then OnHarass() end
 	OnSpellcheck()
 	if Config.farm.farm then Farm() end
 	if Config.Clear.ClearActice then Clear() end
 	if CountEnemyHeroInRange(Erange) == 0 and EActive == true and Eready and Config.ads.autoff then CastSpell(_E) end
+	if Config.combo.activecombo and EActive == true and Eready and Config.ads.CastEeverytime then CastSpell(_E) end
 	if dead then PassiveActive() end
+	BlockAA()
+end
+
+function BlockAA()
+	if Config.ads.BlockAttackOnCombo then if not Config.combo.activecombo then return end 
+		if Config.ads.BlockAautoattack then
+			if MMALoad then
+			elseif SacLoad then
+				_G.AutoCarry.MyHero:AttacksEnabled(true)
+			elseif SxOLoad then
+				SxO:DisableAttacks()
+			end
+		else
+			if MMALoad then
+			elseif SacLoad then
+				_G.AutoCarry.MyHero:AttacksEnabled(false)
+			elseif SxOLoad then
+				SxO:EnableAttacks()
+			end
+		end
+	end
 end
 
 function PassiveActive()
@@ -490,7 +517,7 @@ end
 function CastQ( target )
 	if Qready then
 		if Prediction[Config.pred.choose] == "VPrediction" then
-			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(target, 0.75, 200, 875, 1700, player)
+			local CastPosition, HitChance, Position = VP:GetCircularAOECastPosition(target, 0.5, 200, 875, 1700, player)
 			if CastPosition and HitChance >= 2 and GetDistance(CastPosition) < 875 and target.dead == false then
 				CastSpell(_Q, CastPosition.x, CastPosition.z)
 			end
@@ -501,8 +528,8 @@ function CastQ( target )
 				CastSpell(_Q,hitPos.x,hitPos.z)
 			end
 		elseif Prediction[Config.pred.choose] == "HPrediction" then
-			local Pos, HPHitChance = HPred:GetPredict("Q", target, myHero)
-			if HPHitChance ~= 0 then
+			local Pos, HitChance = HPred:GetPredict("Q", target, myHero)
+			if HitChance ~= 0 and Pos ~= nil then
 			  CastSpell(_Q, Pos.x, Pos.z)
 			end
 		end
@@ -511,6 +538,11 @@ end
 
 function CastW( target )
 	if Wready then
+		if Config.combo.UseWinQrange then 
+			if GetDistance(target, player) > 875 then
+				return
+			end
+		end
 		if Prediction[Config.pred.choose] == "VPrediction" then
 			local CastPosition, HitChance, Position = VP:GetCircularCastPosition(target, 0.5, 10, 1000)
 			if CastPosition and HitChance >= 1 and GetDistance(CastPosition) < 1000 then
@@ -524,7 +556,7 @@ function CastW( target )
 			end
 		elseif Prediction[Config.pred.choose] == "HPrediction" then
 			local Pos, HitChance = HPred:GetPredict("W", target, myHero)
-			if HitChance ~= 0 then
+			if HitChance ~= 0 and Pos ~= nil then
 				CastSpell(_W, Pos.x, Pos.z)
 			end
 		end
@@ -580,7 +612,7 @@ function OnDraw()
 		for j, CanKillChampion in pairs(EnemyHeroes) do
 			if stat(CanKillChampion) == "Can" then
 				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, Config.draw.KillMarkX, Config.draw.KillMarkY+j*20, 0xFFFF0000)
-			elseif stat(CanKillChampion) == "Cant" or stat(CanKillChampion) == "dead" then
+			elseif stat(CanKillChampion) == "dead" or stat(CanKillChampion) == "Can't" then
 				DrawText(CanKillChampion.charName.." can kill with R? | "..stat(CanKillChampion), 18, Config.draw.KillMarkX, Config.draw.KillMarkY+j*20, 0xFFFFFF00)
 			end
 		end
@@ -619,7 +651,7 @@ function stat(unit)
 	if getDmg("R", unit, myHero) > unit.health and not unit.dead then
 		status = "Can"
 	else
-		status = "Cant"
+		status = "Can't"
 	end
 	if unit.dead then
 		status = "dead"
