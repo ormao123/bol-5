@@ -127,7 +127,7 @@ Add E exploit
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.33
+local version = 1.34
 local AUTO_UPDATE = false
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -470,23 +470,23 @@ function OnTick()
 end
 
 function BlockAA()
-	if Config.ads.BlockAttackOnCombo then if not Config.combo.activecombo then return end 
-		if Config.ads.BlockAautoattack then
-			if MMALoad then
-			elseif SacLoad then
-				_G.AutoCarry.MyHero:AttacksEnabled(true)
-			elseif SxOLoad then
-				SxO:DisableAttacks()
-			end
-		else
-			if MMALoad then
-			elseif SacLoad then
-				_G.AutoCarry.MyHero:AttacksEnabled(false)
-			elseif SxOLoad then
-				SxO:EnableAttacks()
-			end
+	if Config.ads.BlockAttackOnCombo then if not Config.combo.activecombo then return end end
+	if Config.ads.BlockAautoattack then
+		if MMALoad then
+		elseif SacLoad then
+			_G.AutoCarry.MyHero:AttacksEnabled(true)
+		elseif SxOLoad then
+			SxO:DisableAttacks()
+		end
+	else
+		if MMALoad then
+		elseif SacLoad then
+			_G.AutoCarry.MyHero:AttacksEnabled(false)
+		elseif SxOLoad then
+			SxO:EnableAttacks()
 		end
 	end
+
 end
 
 function PassiveActive()
