@@ -127,7 +127,7 @@ Add E exploit
 
 local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>Your Karthus:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
 
-local version = 1.34
+local version = 1.35
 local AUTO_UPDATE = false
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/jineyne/bol/master/Your Karthus.lua".."?rand="..math.random(1,10000)
@@ -274,12 +274,12 @@ function OnLoad()
 	PL:LoadPred()
 	STS = SimpleTS()
 
-	--[[
+
 	if HPLoad then
 		HPred:AddSpell("Q", 'Karthus', {type = "PromptCircle", range = 875, delay = 0.75, radius = 200})
 		HPred:AddSpell("W", 'Karthus', {collisionM = false, collisionH = false, type = "DelayLine", range = 100, delay = 0.25, width = 10})
 	end
-	]]
+
 	
 	if GetGame().map.shortName == "twistedTreeline" then
 		TwistedTreeline = true
@@ -470,8 +470,9 @@ function OnTick()
 end
 
 function BlockAA()
-	if Config.ads.BlockAttackOnCombo then if not Config.combo.activecombo then return end end
+	
 	if Config.ads.BlockAautoattack then
+		if Config.ads.BlockAttackOnCombo then if not Config.combo.activecombo then return end end
 		if MMALoad then
 		elseif SacLoad then
 			_G.AutoCarry.MyHero:AttacksEnabled(true)
